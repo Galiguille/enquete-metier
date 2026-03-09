@@ -304,12 +304,12 @@ export default function App() {
       `}} />
 
       {/* Header */}
-      <header className="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center no-print sticky top-0 z-10">
+      <header className="bg-blue-900 text-white p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 no-print sticky top-0 z-10">
         <h1 className="text-xl font-bold flex items-center gap-2">
           <IconFileText />
           Outil d'Enquête Métier
         </h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-center">
           <button 
             onClick={() => setActiveTab('form')}
             className={`md:hidden px-3 py-2 rounded-md flex items-center gap-2 text-sm ${activeTab === 'form' ? 'bg-blue-700' : 'bg-blue-800'}`}
