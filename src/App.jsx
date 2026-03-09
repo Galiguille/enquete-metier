@@ -296,6 +296,21 @@ export default function App() {
                 </div>
               ))}
             </div>
+
+            {/* Case à cocher Consentement RGPD */}
+            <div className="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  checked={formData.consent || false}
+                  onChange={(e) => handleChange('consent', e.target.checked)}
+                />
+                <span className="text-sm text-gray-700">
+                  En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD).
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -380,6 +395,17 @@ export default function App() {
                 </div>
               </div>
             ))}
+
+            {/* Section Signature / Date */}
+            <div className="mt-8 pt-4 border-t-2 border-gray-200 page-break">
+              <div className="flex justify-between items-end">
+                <div className="text-sm text-gray-600">
+                  <p>Fait le {new Date().toLocaleDateString('fr-FR')}</p>
+                  {formData.consent ? <p className="text-emerald-700 font-bold mt-1">✓ Consentement validé</p> : <p className="text-red-400 text-xs mt-1">Consentement en attente</p>}
+                </div>
+                <div className="text-sm text-gray-600 italic">Signature :</div>
+              </div>
+            </div>
 
             <div className="mt-12 text-center text-gray-600 italic page-break">
               <p className="text-base sm:text-lg mb-1">Je vous remercie sincèrement du temps précieux que vous m'avez accordé.</p>
