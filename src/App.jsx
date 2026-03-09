@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -88,6 +88,17 @@ export default function App() {
   const [highlightConsent, setHighlightConsent] = useState(false);
   const recognitionRef = useRef(null);
 
+  useEffect(() => {
+    // Force le viewport pour s'adapter aux écrans mobiles (ex: Motorola G200)
+    let meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = "viewport";
+      document.head.appendChild(meta);
+    }
+    meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+  }, []);
+
   const handleChange = (id, value) => {
     setFormData(prev => ({
       ...prev,
@@ -161,6 +172,7 @@ export default function App() {
           checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightConsent(true);
           setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 6 secondes
+          setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 9 secondes
         }
       }, 100);
       return;
@@ -249,7 +261,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans main-app-wrapper">
+    <div className="h-screen bg-gray-100 flex flex-col font-sans main-app-wrapper">
       
       {/* CSS D'IMPRESSION (Correctif conservé) */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -348,7 +360,7 @@ export default function App() {
                             <textarea
                               id={field.id}
                               rows="3"
-                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y"
+                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y"
                               placeholder="Votre réponse..."
                               value={formData[field.id] || ''}
                               onChange={(e) => handleChange(field.id, e.target.value)}
@@ -357,7 +369,7 @@ export default function App() {
                             <input
                               type="text"
                               id={field.id}
-                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
                               placeholder="Votre réponse..."
                               value={formData[field.id] || ''}
                               onChange={(e) => handleChange(field.id, e.target.value)}
@@ -411,7 +423,7 @@ export default function App() {
         {/* COLONNE DROITE : APERÇU DOCUMENT (Design Moderne restauré) */}
         <div className={`preview-wrapper w-full md:w-1/2 lg:w-7/12 bg-gray-300 overflow-y-auto p-2 sm:p-6 flex justify-center ${activeTab === 'preview' ? 'block' : 'hidden md:flex'}`}>
           
-          <div className="print-container bg-white shadow-2xl max-w-[21cm] w-full min-h-[29.7cm] p-6 sm:p-12 text-gray-900">
+          <div className="print-container bg-white shadow-2xl max-w-[21cm] w-full min-h-[29.7cm] p-4 sm:p-12 text-gray-900">
             
             <div className="flex justify-between items-center mb-8">
               {/* Placeholders pour les logos - À remplacer par vos images */}
@@ -431,7 +443,7 @@ export default function App() {
                 Bonjour Madame, Mademoiselle, Monsieur,
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé(e) par votre métier / secteur d'activité.
+                Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
                 Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.
