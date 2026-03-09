@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -76,17 +76,74 @@ const IconChevron = () => (
 const IconMail = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
 );
+const IconMic = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+);
 
 export default function App() {
   const [formData, setFormData] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState('form');
+  const [listeningField, setListeningField] = useState(null);
+  const recognitionRef = useRef(null);
 
   const handleChange = (id, value) => {
     setFormData(prev => ({
       ...prev,
       [id]: value
     }));
+  };
+
+  const toggleListening = (fieldId) => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      alert("Votre navigateur ne supporte pas la reconnaissance vocale. Essayez Chrome, Edge ou Safari.");
+      return;
+    }
+
+    if (listeningField === fieldId) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setListeningField(null);
+      return;
+    }
+
+    if (listeningField && recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setListeningField(fieldId);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setFormData(prev => {
+        const currentVal = prev[fieldId] || '';
+        const prefix = currentVal && !currentVal.endsWith(' ') ? ' ' : '';
+        const textToAdd = !currentVal ? transcript.charAt(0).toUpperCase() + transcript.slice(1) : transcript;
+        return { ...prev, [fieldId]: currentVal + prefix + textToAdd };
+      });
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Erreur vocale:", event.error);
+      setListeningField(null);
+    };
+
+    recognition.onend = () => {
+      setListeningField(null);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
   };
 
   const handlePrint = () => {
@@ -276,25 +333,39 @@ export default function App() {
                         <label htmlFor={field.id} className="text-sm font-medium text-gray-700">
                           {field.label}
                         </label>
-                        {field.type === 'textarea' ? (
-                          <textarea
-                            id={field.id}
-                            rows="3"
-                            className="w-full rounded-md border-gray-300 border p-2 sm:p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y"
-                            placeholder="Votre réponse..."
-                            value={formData[field.id] || ''}
-                            onChange={(e) => handleChange(field.id, e.target.value)}
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            id={field.id}
-                            className="w-full rounded-md border-gray-300 border p-2 sm:p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                            placeholder="Votre réponse..."
-                            value={formData[field.id] || ''}
-                            onChange={(e) => handleChange(field.id, e.target.value)}
-                          />
-                        )}
+                        <div className="relative">
+                          {field.type === 'textarea' ? (
+                            <textarea
+                              id={field.id}
+                              rows="3"
+                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y"
+                              placeholder="Votre réponse..."
+                              value={formData[field.id] || ''}
+                              onChange={(e) => handleChange(field.id, e.target.value)}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              id={field.id}
+                              className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                              placeholder="Votre réponse..."
+                              value={formData[field.id] || ''}
+                              onChange={(e) => handleChange(field.id, e.target.value)}
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => toggleListening(field.id)}
+                            className={`absolute right-2 top-2 p-1.5 rounded-full transition-all ${
+                              listeningField === field.id 
+                                ? 'bg-red-100 text-red-600 animate-pulse ring-2 ring-red-400' 
+                                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                            title="Dicter la réponse"
+                          >
+                            <IconMic />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
