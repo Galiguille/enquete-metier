@@ -397,8 +397,8 @@ export default function App() {
             
             <div className="flex justify-between items-center mb-8">
               {/* Placeholders pour les logos - À remplacer par vos images */}
-              <img src="https://placehold.co/150x80?text=Logo+1" alt="Image 1" className="h-20 object-contain" />
-              <img src="https://placehold.co/150x80?text=Logo+2" alt="Image 2" className="h-20 object-contain" />
+              <img src="https://gemini.google.com/share/f1cbadfbe589" alt="Image 1" className="h-20 object-contain" />
+              <img src="https://gemini.google.com/share/8f24bbd9edb0" alt="Image 2" className="h-20 object-contain" />
             </div>
 
             <div className="text-center mb-8 page-break">
