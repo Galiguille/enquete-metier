@@ -94,6 +94,11 @@ export default function App() {
   };
 
   const handleEmail = async () => {
+    if (!formData.consent) {
+      alert("Veuillez cocher la case de consentement RGPD pour générer le document.");
+      return;
+    }
+
     setIsGenerating(true);
     const input = document.querySelector('.print-container');
     
