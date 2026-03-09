@@ -85,6 +85,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState('form');
   const [listeningField, setListeningField] = useState(null);
+  const [highlightConsent, setHighlightConsent] = useState(false);
   const recognitionRef = useRef(null);
 
   const handleChange = (id, value) => {
@@ -153,6 +154,15 @@ export default function App() {
   const handleEmail = async () => {
     if (!formData.consent) {
       alert("Veuillez cocher la case de consentement RGPD pour générer le document.");
+      setActiveTab('form'); // Force l'affichage de l'onglet formulaire (utile sur mobile)
+      setTimeout(() => {
+        const checkbox = document.getElementById('rgpd-checkbox');
+        if (checkbox) {
+          checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightConsent(true);
+          setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 6 secondes
+        }
+      }, 100);
       return;
     }
 
@@ -224,7 +234,7 @@ export default function App() {
       }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
-      alert("Une erreur est survenue lors de la création du PDF.");
+      alert("Une erreur est survenue lors de la création du PDF, veuillez réessayer.");
     } finally {
       // Nettoyage
       if (wasHidden) {
@@ -374,15 +384,23 @@ export default function App() {
             </div>
 
             {/* Case à cocher Consentement RGPD */}
-            <div className="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <div className={`mt-6 p-4 rounded-xl border transition-all duration-300 ${
+              highlightConsent 
+                ? 'bg-red-100 border-red-500 ring-4 ring-red-200 animate-pulse' 
+                : 'bg-blue-50 border-blue-100'
+            }`}>
               <label className="flex items-start gap-3 cursor-pointer">
                 <input 
+                  id="rgpd-checkbox"
                   type="checkbox" 
-                  className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  className={`mt-1 w-4 h-4 rounded border-gray-300 focus:ring-blue-500 ${highlightConsent ? 'text-red-600' : 'text-blue-600'}`}
                   checked={formData.consent || false}
-                  onChange={(e) => handleChange('consent', e.target.checked)}
+                  onChange={(e) => {
+                    handleChange('consent', e.target.checked);
+                    if (e.target.checked) setHighlightConsent(false);
+                  }}
                 />
-                <span className="text-sm text-gray-700">
+                <span className={`text-sm ${highlightConsent ? 'text-red-700 font-bold' : 'text-gray-700'}`}>
                   En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD).
                 </span>
               </label>
@@ -397,8 +415,8 @@ export default function App() {
             
             <div className="flex justify-between items-center mb-8">
               {/* Placeholders pour les logos - À remplacer par vos images */}
-              <img src="https://gemini.google.com/share/f1cbadfbe589" alt="Image 1" className="h-20 object-contain" />
-              <img src="https://gemini.google.com/share/8f24bbd9edb0" alt="Image 2" className="h-20 object-contain" />
+              <img src="/logo1.png" crossOrigin="anonymous" alt="Logo Gauche" className="h-20 object-contain" />
+              <img src="/logo2.png" crossOrigin="anonymous" alt="Logo Droite" className="h-20 object-contain" />
             </div>
 
             <div className="text-center mb-8 page-break">
