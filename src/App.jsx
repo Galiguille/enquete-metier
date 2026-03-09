@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const sections = [
   {
@@ -77,6 +79,7 @@ const IconMail = () => (
 
 export default function App() {
   const [formData, setFormData] = useState({});
+  const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState('form');
 
   const handleChange = (id, value) => {
@@ -90,34 +93,87 @@ export default function App() {
     window.print();
   };
 
-  const handleEmail = () => {
-    const recipient = '';
-    const subject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
+  const handleEmail = async () => {
+    setIsGenerating(true);
+    const input = document.querySelector('.print-container');
     
-    // On prépare un résumé des informations générales pour le corps du mail
-    const introSection = sections.find(s => s.id === 'intro');
-    const introText = introSection 
-      ? introSection.fields.map(f => `${f.label} : ${formData[f.id] || 'Non renseigné'}`).join('\n')
-      : '';
+    // Gestion visibilité mobile : si l'aperçu est caché, on le rend visible temporairement pour la capture
+    const previewWrapper = document.querySelector('.preview-wrapper');
+    const wasHidden = previewWrapper && previewWrapper.classList.contains('hidden');
+    
+    if (wasHidden) {
+      previewWrapper.classList.remove('hidden');
+      // On le sort du flux visuel pour ne pas casser l'interface mobile pendant la génération
+      previewWrapper.style.position = 'absolute';
+      previewWrapper.style.left = '-9999px';
+      previewWrapper.style.top = '0';
+      previewWrapper.style.display = 'block';
+    }
 
-    const body = `Bonjour,
+    try {
+      // 1. Capture du document en image
+      const canvas = await html2canvas(input, {
+        scale: 2, // Meilleure qualité
+        useCORS: true,
+        logging: false
+      });
 
-Veuillez trouver en pièce jointe le document de l'enquête métier.
-Voici les informations générales de l'enquête métier :
+      // 2. Création du PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      // Gestion multipage simplifiée (si le contenu dépasse une page A4)
+      let heightLeft = pdfImgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
+      heightLeft -= pdfHeight;
 
-Note : Pour générer le document PDF, veuillez d'abord utiliser la fonction "Imprimer / PDF" de l'application, l'enregistrer sur votre appareil, puis l'attacher manuellement à cet e-mail.
-${introText}
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfImgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
+        heightLeft -= pdfHeight;
+      }
 
-Lien vers le questionnaire : ${window.location.href}
+      // 3. Envoi ou Téléchargement
+      const blob = pdf.output('blob');
+      const file = new File([blob], "enquete-metier.pdf", { type: "application/pdf" });
+      const subject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
+      const body = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
 
-Veuillez trouver le détail complet des réponses dans le document PDF ci-joint.
-
-Note : N'oubliez pas de générer le PDF via le bouton "Imprimer / PDF" et de l'ajouter à cet e-mail.
-
-Cordialement.
-`;
-    const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoLink);
+      // Si le navigateur supporte le partage de fichiers (Mobile, Safari, Edge...)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: subject,
+          text: body,
+        });
+      } else {
+        // Fallback pour les navigateurs classiques (Chrome Desktop, etc.)
+        pdf.save("enquete-metier.pdf");
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+        alert("Le PDF a été téléchargé. Veuillez l'ajouter manuellement à l'email qui vient de s'ouvrir.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la génération :", error);
+      alert("Une erreur est survenue lors de la création du PDF.");
+    } finally {
+      // Nettoyage
+      if (wasHidden) {
+        previewWrapper.classList.add('hidden');
+        previewWrapper.style.position = '';
+        previewWrapper.style.left = '';
+        previewWrapper.style.top = '';
+        previewWrapper.style.display = '';
+      }
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -179,10 +235,10 @@ Cordialement.
           </button>
           <button
             onClick={handleEmail}
-            className="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium"
+            disabled={isGenerating}
+            className={`${isGenerating ? 'bg-gray-400 cursor-wait' : 'bg-sky-600 hover:bg-sky-500'} text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium`}
           >
-            <IconMail />
-            <span className="hidden sm:inline">Envoyer par mail</span>
+            {isGenerating ? <span className="animate-pulse">Génération...</span> : <><IconMail /><span className="hidden sm:inline">Envoyer PDF</span></>}
           </button>
           <button 
             onClick={handlePrint}
