@@ -158,6 +158,11 @@ export default function App() {
     recognition.start();
   };
 
+  // Calcul de la progression
+  const allFields = sections.flatMap(section => section.fields);
+  const filledFields = allFields.filter(field => formData[field.id] && formData[field.id].trim().length > 0).length;
+  const progress = Math.round((filledFields / allFields.length) * 100);
+
   const handlePrint = () => {
     window.print();
   };
@@ -171,7 +176,7 @@ export default function App() {
         if (checkbox) {
           checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightConsent(true);
-          setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 6 secondes
+          setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 9 secondes
           setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 9 secondes
         }
       }, 100);
@@ -333,6 +338,14 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* Barre de progression */}
+      <div className="w-full bg-gray-200 h-1.5 no-print" title={`${progress}% complété`}>
+        <div 
+          className="bg-emerald-500 h-1.5 transition-all duration-500 ease-out" 
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
 
       <main className="main-content-area flex-1 flex flex-col md:flex-row overflow-hidden">
         
