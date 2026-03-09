@@ -304,7 +304,8 @@ export default function App() {
       `}} />
 
       {/* Header */}
-      <header className="bg-blue-900 text-white p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 no-print sticky top-0 z-10">
+      <div className="sticky top-0 z-10 no-print shadow-md">
+        <header className="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
         <h1 className="text-xl font-bold flex items-center gap-2">
           <IconFileText />
           Outil d'Enquête Métier
@@ -340,11 +341,12 @@ export default function App() {
       </header>
 
       {/* Barre de progression */}
-      <div className="w-full bg-gray-200 h-1.5 no-print" title={`${progress}% complété`}>
+      <div className="w-full bg-gray-200 h-1.5" title={`${progress}% complété`}>
         <div 
           className="bg-emerald-500 h-1.5 transition-all duration-500 ease-out" 
           style={{ width: `${progress}%` }}
         ></div>
+      </div>
       </div>
 
       <main className="main-content-area flex-1 flex flex-col md:flex-row overflow-hidden">
