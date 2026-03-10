@@ -79,6 +79,9 @@ const IconMail = () => (
 const IconMic = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
 );
+const IconEye = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+);
 
 export default function App() {
   const [formData, setFormData] = useState({});
@@ -86,6 +89,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('form');
   const [listeningField, setListeningField] = useState(null);
   const [highlightConsent, setHighlightConsent] = useState(false);
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -323,6 +327,13 @@ export default function App() {
           >
             <IconFileText /> Aperçu
           </button>
+          <button 
+            onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+            className={`hidden md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors ${isFullscreenPreview ? 'bg-blue-700 ring-2 ring-blue-400' : 'bg-blue-800 hover:bg-blue-700'}`}
+            title={isFullscreenPreview ? "Revenir à l'édition" : "Voir le document en plein écran"}
+          >
+            {isFullscreenPreview ? <IconEdit /> : <IconEye />} <span className="hidden lg:inline">{isFullscreenPreview ? "Éditer" : "Plein Écran"}</span>
+          </button>
           <button
             onClick={handleEmail}
             disabled={isGenerating}
@@ -352,14 +363,14 @@ export default function App() {
       <main className="main-content-area flex-1 flex flex-col md:flex-row overflow-hidden">
         
         {/* COLONNE GAUCHE : FORMULAIRE */}
-        <div className={`no-print w-full md:w-1/2 lg:w-5/12 border-r border-gray-300 bg-white overflow-y-auto ${activeTab === 'form' ? 'block' : 'hidden md:block'}`}>
+        <div className={`no-print w-full ${isFullscreenPreview ? 'md:hidden' : 'md:w-1/2 lg:w-5/12'} border-r border-gray-300 bg-white overflow-y-auto ${activeTab === 'form' ? 'block' : 'hidden md:block'}`}>
           <div className="p-4 sm:p-6">
             <h2 className="text-2xl font-semibold mb-2 text-gray-800 border-b pb-2">Saisie des réponses</h2>
             <p className="text-sm text-gray-500 mb-6">Remplissez les champs ci-dessous. Le document final se mettra à jour automatiquement à droite.</p>
             
             <div className="space-y-8">
               {sections.map((section) => (
-                <div key={section.id} className="bg-gray-50 p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+                <div key={section.id} className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
                     <span className="text-blue-500"><IconChevron /></span>
                     {section.title}
@@ -432,13 +443,23 @@ export default function App() {
                 </span>
               </label>
             </div>
+
+            {/* Bouton Voir Aperçu (Mobile) */}
+            <div className="mt-8 mb-4 md:hidden">
+              <button
+                onClick={() => setActiveTab('preview')}
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 font-bold active:scale-95 transition-transform"
+              >
+                <IconEye /> Voir l'aperçu du document
+              </button>
+            </div>
           </div>
         </div>
 
         {/* COLONNE DROITE : APERÇU DOCUMENT (Design Moderne restauré) */}
-        <div className={`preview-wrapper w-full md:w-1/2 lg:w-7/12 bg-gray-300 overflow-y-auto p-2 sm:p-6 flex justify-center ${activeTab === 'preview' ? 'block' : 'hidden md:flex'}`}>
+        <div className={`preview-wrapper w-full ${isFullscreenPreview ? 'md:w-full' : 'md:w-1/2 lg:w-7/12'} bg-gray-300 overflow-y-auto p-2 sm:p-6 ${activeTab === 'preview' ? 'block' : 'hidden md:block'}`}>
           
-          <div className="print-container bg-white shadow-2xl max-w-[21cm] w-full min-h-[29.7cm] p-4 sm:p-12 text-gray-900">
+          <div className="print-container bg-white shadow-2xl max-w-[21cm] w-full min-h-[29.7cm] p-4 sm:p-12 text-gray-900 mx-auto">
             
             <div className="flex justify-between items-center mb-8">
               {/* Placeholders pour les logos - À remplacer par vos images */}
