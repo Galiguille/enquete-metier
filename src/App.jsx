@@ -394,9 +394,16 @@ export default function App() {
       } else {
         // Fallback pour les navigateurs classiques (Chrome Desktop, etc.)
         pdf.save("enquete-metier.pdf");
-        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailtoLink;
-        alert("Le PDF a été téléchargé. Veuillez l'ajouter manuellement à l'email qui vient de s'ouvrir.");
+        
+        // On utilise des délais pour éviter que l'alerte ne bloque l'ouverture du client mail
+        setTimeout(() => {
+          const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          window.location.href = mailtoLink;
+          
+          setTimeout(() => {
+            alert("Le PDF a été téléchargé.\n\nVotre logiciel de messagerie devrait s'être ouvert. Veuillez y joindre le fichier PDF téléchargé.");
+          }, 1000);
+        }, 500);
       }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
