@@ -81,6 +81,15 @@ const IconMic = () => (
 const IconEye = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
 );
+const IconWhatsApp = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.38 0 0 1 8 8v.5z"></path></svg>
+);
+const IconTelegram = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+);
+const IconSMS = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+);
 
 // Helper pour charger les images pour le PDF
 const loadImageAsDataURI = (url) => {
@@ -110,6 +119,7 @@ export default function App() {
   const [listeningField, setListeningField] = useState(null);
   const [highlightConsent, setHighlightConsent] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -213,6 +223,10 @@ export default function App() {
   const allFields = sections.flatMap(section => section.fields);
   const filledFields = allFields.filter(field => formData[field.id] && formData[field.id].trim().length > 0).length;
   const progress = Math.round((filledFields / allFields.length) * 100);
+
+  // Préparation des messages de partage
+  const shareSubject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
+  const shareBody = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
 
   const handlePrint = () => {
     window.print();
@@ -376,37 +390,12 @@ export default function App() {
         pdf.setTextColor(0, 0, 0);
       }
 
-      // Envoi ou Téléchargement
-      const blob = pdf.output('blob');
-      const file = new File([blob], "enquete-metier.pdf", { type: "application/pdf" });
-      const subject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
-      const body = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
+      // 1. Téléchargement direct du PDF
+      pdf.save("enquete-metier.pdf");
+      
+      // 2. Ouverture de la modale de partage
+      setShowShareModal(true);
 
-      // L'API de partage est plus fiable sur mobile. Sur desktop, on force le fallback
-      // pour éviter l'erreur "Must be handling a user gesture" due à l'asynchronisme du chargement des images.
-      const isMobile = /Mobi/i.test(window.navigator.userAgent);
-      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: subject,
-          text: body,
-        });
-      } else {
-        // Fallback pour les navigateurs classiques (Chrome Desktop, etc.)
-        
-        // Stratégie inversée : On ouvre le mail D'ABORD, puis on télécharge.
-        // Cela évite que la fenêtre de sauvegarde du fichier (Save As) ne bloque l'ouverture du mail.
-        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailtoLink;
-        
-        setTimeout(() => {
-          pdf.save("enquete-metier.pdf");
-          
-          setTimeout(() => {
-            alert("Le PDF a été téléchargé.\n\nVotre logiciel de messagerie devrait s'être ouvert. N'oubliez pas d'y joindre le fichier qui vient d'être téléchargé.");
-          }, 1000);
-        }, 1000);
-      }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
       if (error.name !== 'AbortError') {
@@ -733,6 +722,53 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* MODALE DE PARTAGE */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
+            <button 
+              onClick={() => setShowShareModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <div className="text-center mb-6">
+              <div className="mx-auto bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Document téléchargé !</h3>
+              <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+                Le PDF a été enregistré sur votre appareil. Choisissez comment envoyer le message (n'oubliez pas de <strong>joindre le fichier</strong>) :
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <a href={`mailto:?subject=${encodeURIComponent(shareSubject)}&body=${encodeURIComponent(shareBody)}`} className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 text-gray-700 group">
+                <div className="group-hover:scale-110 transition-transform"><IconMail /></div>
+                <span className="mt-2 text-sm font-medium">Email</span>
+              </a>
+              <a href={`https://wa.me/?text=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-200 text-green-700 group">
+                <div className="group-hover:scale-110 transition-transform"><IconWhatsApp /></div>
+                <span className="mt-2 text-sm font-medium">WhatsApp</span>
+              </a>
+              <a href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 rounded-lg bg-sky-50 hover:bg-sky-100 transition-colors border border-sky-200 text-sky-700 group">
+                <div className="group-hover:scale-110 transition-transform"><IconTelegram /></div>
+                <span className="mt-2 text-sm font-medium">Telegram</span>
+              </a>
+              <a href={`sms:?&body=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`} className="flex flex-col items-center justify-center p-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors border border-indigo-200 text-indigo-700 group">
+                <div className="group-hover:scale-110 transition-transform"><IconSMS /></div>
+                <span className="mt-2 text-sm font-medium">SMS</span>
+              </a>
+            </div>
+            
+            <button onClick={() => setShowShareModal(false)} className="w-full mt-6 bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg">
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
