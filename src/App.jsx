@@ -300,36 +300,39 @@ export default function App() {
       
       {/* CSS D'IMPRESSION (Correctif conservé) */}
       <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+        .print-container {
+          font-family: 'Lato', sans-serif;
+        }
         @media print {
-          html, body, #root, .main-app-wrapper, .main-content-area, .preview-wrapper {
-            height: auto !important;
-            min-height: auto !important;
-            overflow: visible !important;
-            display: block !important;
-            position: static !important;
+          html, body {
             background: white !important;
+            font-family: 'Lato', sans-serif;
           }
-          
           .no-print { display: none !important; }
-
           .preview-wrapper {
-            width: 100% !important;
-            padding: 0 !important;
-            margin: 0 !important;
+            all: unset !important;
           }
-
           .print-container { 
-            width: 100% !important; 
-            max-width: 100% !important;
-            margin: 0 !important; 
-            padding: 0 !important; 
+            font-size: 11pt;
+            color: #333;
             box-shadow: none !important;
-            background: white !important;
           }
-          
-          .page-break { page-break-inside: avoid; margin-bottom: 20px; }
-          
-          @page { margin: 1cm; }
+          .print-container h1, .print-container h2 {
+            color: #000 !important;
+          }
+          .print-container h2, .print-container .answer-box {
+            background-color: transparent !important;
+          }
+          .print-container .answer-box {
+            border-color: #e5e7eb !important;
+          }
+          .page-break { 
+            page-break-inside: avoid;
+          }
+          @page { 
+            margin: 2cm;
+          }
         }
       `}} />
 
@@ -505,14 +508,14 @@ export default function App() {
               <img src="/logo2.png" crossOrigin="anonymous" alt="Logo Droite" className="h-20 object-contain" />
             </div>
 
-            <div className="text-center mb-8 page-break">
-              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-wider mb-6 text-gray-800 border-b-2 border-gray-800 pb-3 inline-block">
+            <div className="text-center mb-12 page-break">
+              <h1 className="text-3xl font-bold text-center mb-8 pb-4 border-b-2 border-gray-300">
                 Enquête Métier
               </h1>
             </div>
 
-            <div className="mb-8 page-break">
-              <h2 className="text-lg sm:text-xl font-bold uppercase mb-4 text-gray-700 bg-gray-100 p-2 border-l-4 border-gray-800">Motivation</h2>
+            <div className="mb-10 page-break">
+              <h2 className="text-xl font-bold mb-5 text-gray-800 border-b border-gray-300 pb-2">Motivation</h2>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
                 Bonjour Madame, Mademoiselle, Monsieur,
               </p>
@@ -523,13 +526,13 @@ export default function App() {
                 Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps.<br/>
+                Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).<br/>
                 Votre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur.
               </p>
             </div>
 
-            <div className="mb-8 page-break">
-              <h2 className="text-lg sm:text-xl font-bold uppercase mb-6 text-gray-700 bg-gray-100 p-2 border-l-4 border-gray-800">Enquête sur les métiers</h2>
+            <div className="mb-10 page-break">
+              <h2 className="text-xl font-bold mb-6 text-gray-800 border-b border-gray-300 pb-2">Enquête sur les métiers</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div className="border-b border-gray-300 pb-1">
                   <span className="font-semibold block text-xs text-gray-500 uppercase">Entreprise ou organisme :</span>
@@ -560,15 +563,15 @@ export default function App() {
 
             {sections.slice(1).map((section) => (
               <div key={`doc-${section.id}`} className="mb-8">
-                <h2 className="text-lg sm:text-xl font-bold uppercase mb-5 text-gray-700 bg-gray-100 p-2 border-l-4 border-gray-800 page-break">
+                <h2 className="text-xl font-bold mb-5 text-gray-800 border-b border-gray-300 pb-2 page-break">
                   {section.title}
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {section.fields.map((field) => (
                     <div key={`doc-field-${field.id}`} className="page-break">
-                      <p className="font-semibold text-gray-800 mb-1 text-sm sm:text-base">{field.label}</p>
-                      <div className="min-h-[2rem] p-2 sm:p-3 bg-blue-50/50 border border-blue-100 rounded text-gray-800 whitespace-pre-wrap text-sm sm:text-base">
-                        {formData[field.id] ? formData[field.id] : <span className="text-gray-400 italic">...</span>}
+                      <p className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">{field.label}</p>
+                      <div className="answer-box min-h-[2rem] p-3 bg-gray-50 border-l-2 border-gray-400 text-gray-800 whitespace-pre-wrap text-base">
+                        {formData[field.id] ? formData[field.id] : <span className="text-gray-400 italic">Non renseigné</span>}
                       </div>
                     </div>
                   ))}
