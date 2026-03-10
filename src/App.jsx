@@ -261,15 +261,23 @@ export default function App() {
       // Logos
       const logoHeight = 20;
       if (logo1Data) {
-        const imgProps = pdf.getImageProperties(logo1Data);
-        const aspectRatio = imgProps.width / imgProps.height;
-        pdf.addImage(logo1Data, 'PNG', margin, y, logoHeight * aspectRatio, logoHeight);
+        try {
+          const imgProps = pdf.getImageProperties(logo1Data);
+          const aspectRatio = imgProps.width / imgProps.height;
+          pdf.addImage(logo1Data, 'PNG', margin, y, logoHeight * aspectRatio, logoHeight);
+        } catch (e) {
+          console.warn("Erreur lors de l'ajout du logo 1", e);
+        }
       }
       if (logo2Data) {
-        const imgProps = pdf.getImageProperties(logo2Data);
-        const aspectRatio = imgProps.width / imgProps.height;
-        const logoWidth = logoHeight * aspectRatio;
-        pdf.addImage(logo2Data, 'PNG', pdfWidth - margin - logoWidth, y, logoWidth, logoHeight);
+        try {
+          const imgProps = pdf.getImageProperties(logo2Data);
+          const aspectRatio = imgProps.width / imgProps.height;
+          const logoWidth = logoHeight * aspectRatio;
+          pdf.addImage(logo2Data, 'PNG', pdfWidth - margin - logoWidth, y, logoWidth, logoHeight);
+        } catch (e) {
+          console.warn("Erreur lors de l'ajout du logo 2", e);
+        }
       }
       if (logo1Data || logo2Data) {
         y += logoHeight + 10;
@@ -390,7 +398,9 @@ export default function App() {
       }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
-      alert("Une erreur est survenue lors de la création du PDF.");
+      if (error.name !== 'AbortError') {
+        alert("Une erreur est survenue lors de la création du PDF : " + (error.message || error));
+      }
     } finally {
       setIsGenerating(false);
     }
