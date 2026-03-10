@@ -377,12 +377,18 @@ export default function App() {
         </div>
       </header>
 
-      {/* Barre de progression */}
-      <div className="w-full bg-gray-200 h-1.5" title={`${progress}% complété`}>
-        <div 
-          className="bg-emerald-500 h-1.5 transition-all duration-500 ease-out" 
-          style={{ width: `${progress}%` }}
-        ></div>
+      {/* Barre de progression améliorée */}
+      <div className="px-4 pt-1 pb-2 bg-blue-900 border-t border-blue-800/50">
+        <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-semibold text-blue-200/80 uppercase tracking-wider">Progression</span>
+            <span className="text-sm font-bold text-white">{progress}%</span>
+        </div>
+        <div className="w-full bg-black/25 rounded-full h-2.5 shadow-inner">
+            <div 
+                className="bg-gradient-to-r from-emerald-400 to-sky-400 h-2.5 rounded-full shadow-lg transition-all duration-500 ease-out" 
+                style={{ width: `${progress}%` }}
+            ></div>
+        </div>
       </div>
       </div>
 
