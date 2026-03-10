@@ -382,8 +382,10 @@ export default function App() {
       const subject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
       const body = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
 
-      // Si le navigateur supporte le partage de fichiers (Mobile, Safari, Edge...)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // L'API de partage est plus fiable sur mobile. Sur desktop, on force le fallback
+      // pour éviter l'erreur "Must be handling a user gesture" due à l'asynchronisme du chargement des images.
+      const isMobile = /Mobi/i.test(window.navigator.userAgent);
+      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: subject,
