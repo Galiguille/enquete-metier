@@ -365,7 +365,13 @@ export default function App() {
         <div className={`no-print w-full ${isFullscreenPreview ? 'md:hidden' : 'md:w-1/2 lg:w-5/12'} border-r border-gray-300 bg-white overflow-y-auto ${activeTab === 'form' ? 'block' : 'hidden md:block'}`}>
           <div className="p-4 sm:p-6">
             <h2 className="text-2xl font-semibold mb-2 text-gray-800 border-b pb-2">Saisie des réponses</h2>
-            <p className="text-sm text-gray-500 mb-6">Remplissez les champs ci-dessous. Le document final se mettra à jour automatiquement à droite.</p>
+            <div className="text-sm text-gray-500 mb-6 space-y-3">
+              <p>Remplissez les champs ci-dessous. Le document final se mettra à jour automatiquement à droite.</p>
+              <div className="flex items-start sm:items-center gap-2 text-blue-700 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <div className="shrink-0 mt-0.5 sm:mt-0"><IconMic /></div>
+                <span><strong>Astuce :</strong> Vous pouvez dicter vos réponses en cliquant sur l'icône micro dans chaque champ.</span>
+              </div>
+            </div>
             
             <div className="space-y-8">
               {sections.map((section) => (
