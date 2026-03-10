@@ -103,6 +103,33 @@ export default function App() {
     meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
   }, []);
 
+  // Restauration et sauvegarde automatique des données
+  useEffect(() => {
+    // Au chargement, on essaie de restaurer les données
+    try {
+      const savedData = localStorage.getItem('enqueteFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (Object.keys(parsedData).length > 0) {
+          if (window.confirm("Une session précédente a été trouvée. Voulez-vous restaurer les données saisies ?")) {
+            setFormData(parsedData);
+          } else {
+            // Si l'utilisateur refuse, on nettoie le stockage pour la prochaine fois
+            localStorage.removeItem('enqueteFormData');
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la restauration depuis le localStorage:", error);
+      localStorage.removeItem('enqueteFormData');
+    }
+  }, []); // Ne s'exécute qu'une seule fois au montage
+
+  useEffect(() => {
+    // À chaque modification du formulaire, on sauvegarde les données
+    localStorage.setItem('enqueteFormData', JSON.stringify(formData));
+  }, [formData]); // S'exécute à chaque fois que formData change
+
   const handleChange = (id, value) => {
     setFormData(prev => ({
       ...prev,
