@@ -545,7 +545,6 @@ export default function App() {
                   <p>Fait le {new Date().toLocaleDateString('fr-FR')}</p>
                   {formData.consent ? <p className="text-emerald-700 font-bold mt-1">✓ Consentement validé</p> : <p className="text-red-400 text-xs mt-1">Consentement en attente</p>}
                 </div>
-                <div className="text-sm text-gray-600 italic">Signature :</div>
               </div>
             </div>
 
