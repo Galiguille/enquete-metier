@@ -438,7 +438,7 @@ export default function App() {
                   }}
                 />
                 <span className={`text-sm ${highlightConsent ? 'text-red-700 font-bold' : 'text-gray-700'}`}>
-                  En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD).
+                  En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD) (aucune information reste stockee sur serveur ou ordinateur).
                 </span>
               </label>
             </div>
