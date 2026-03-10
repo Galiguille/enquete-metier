@@ -120,6 +120,7 @@ export default function App() {
   const [highlightConsent, setHighlightConsent] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [pdfFile, setPdfFile] = useState(null);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -392,8 +393,13 @@ export default function App() {
 
       // 1. Téléchargement direct du PDF
       pdf.save("enquete-metier.pdf");
+
+      // 2. Préparation du fichier pour le partage natif (Mobile)
+      const blob = pdf.output('blob');
+      const file = new File([blob], "enquete-metier.pdf", { type: "application/pdf" });
+      setPdfFile(file);
       
-      // 2. Ouverture de la modale de partage
+      // 3. Ouverture de la modale de partage
       setShowShareModal(true);
 
     } catch (error) {
@@ -743,6 +749,25 @@ export default function App() {
                 Le PDF a été enregistré sur votre appareil. Choisissez comment envoyer le message (n'oubliez pas de <strong>joindre le fichier</strong>) :
               </p>
             </div>
+
+            {/* Bouton de Partage Natif (Visible uniquement si supporté, ex: Mobile) */}
+            {navigator.canShare && pdfFile && navigator.canShare({ files: [pdfFile] }) && (
+              <button 
+                onClick={async () => {
+                  try {
+                    await navigator.share({
+                      files: [pdfFile],
+                      title: shareSubject,
+                      text: shareBody
+                    });
+                  } catch (e) { console.log("Partage annulé ou erreur", e); }
+                }}
+                className="w-full mb-4 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                Partager le fichier directement
+              </button>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <a href={`mailto:?subject=${encodeURIComponent(shareSubject)}&body=${encodeURIComponent(shareBody)}`} className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 text-gray-700 group">
