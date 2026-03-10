@@ -406,15 +406,29 @@ export default function App() {
           font-family: 'Lato', sans-serif;
         }
         @media print {
-          html, body {
+          html, body, #root, .main-app-wrapper, .main-content-area {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            display: block !important;
             background: white !important;
             font-family: 'Lato', sans-serif;
           }
           .no-print { display: none !important; }
           .preview-wrapper {
-            all: unset !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
           .print-container { 
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             font-size: 11pt;
             color: #333;
             box-shadow: none !important;
