@@ -181,7 +181,6 @@ export default function App() {
           checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightConsent(true);
           setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 9 secondes
-          setTimeout(() => setHighlightConsent(false), 9000); // Arrête le clignotement après 9 secondes
         }
       }, 100);
       return;
