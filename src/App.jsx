@@ -82,6 +82,27 @@ const IconEye = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
 );
 
+// Helper pour charger les images pour le PDF
+const loadImageAsDataURI = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      console.error(`Impossible de charger l'image pour le PDF: ${url}`);
+      resolve(null); // On continue même si une image manque
+    };
+    img.src = new URL(url, window.location.origin).href;
+  });
+};
+
 export default function App() {
   const [formData, setFormData] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -215,6 +236,11 @@ export default function App() {
     setIsGenerating(true);
 
     try {
+      const [logo1Data, logo2Data] = await Promise.all([
+        loadImageAsDataURI('/logo1.png'),
+        loadImageAsDataURI('/logo2.png')
+      ]);
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -232,6 +258,23 @@ export default function App() {
 
       // --- Construction du PDF ---
 
+      // Logos
+      const logoHeight = 20;
+      if (logo1Data) {
+        const imgProps = pdf.getImageProperties(logo1Data);
+        const aspectRatio = imgProps.width / imgProps.height;
+        pdf.addImage(logo1Data, 'PNG', margin, y, logoHeight * aspectRatio, logoHeight);
+      }
+      if (logo2Data) {
+        const imgProps = pdf.getImageProperties(logo2Data);
+        const aspectRatio = imgProps.width / imgProps.height;
+        const logoWidth = logoHeight * aspectRatio;
+        pdf.addImage(logo2Data, 'PNG', pdfWidth - margin - logoWidth, y, logoWidth, logoHeight);
+      }
+      if (logo1Data || logo2Data) {
+        y += logoHeight + 10;
+      }
+
       // Titre
       pdf.setFontSize(24);
       pdf.setFont('helvetica', 'bold');
@@ -242,14 +285,17 @@ export default function App() {
       checkPageBreak(40);
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(49, 46, 129); // text-blue-900
       pdf.text("Motivation", margin, y);
       y += 5;
       pdf.setLineWidth(0.5);
+      pdf.setDrawColor(209, 213, 219); // gray-300
       pdf.line(margin, y, pdfWidth - margin, y);
       y += 10;
 
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0);
       const motivationText = [
         "Bonjour Madame, Mademoiselle, Monsieur,",
         "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
@@ -258,6 +304,7 @@ export default function App() {
       ];
       motivationText.forEach(para => {
         const lines = pdf.splitTextToSize(para, maxLineWidth);
+        checkPageBreak(lines.length * lineHeight);
         pdf.text(lines, margin, y);
         y += lines.length * (lineHeight - 1) + 3;
       });
@@ -268,27 +315,38 @@ export default function App() {
         checkPageBreak(20);
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(49, 46, 129); // text-blue-900
         pdf.text(section.title, margin, y);
         y += 5;
         pdf.setLineWidth(0.5);
+        pdf.setDrawColor(209, 213, 219); // gray-300
         pdf.line(margin, y, pdfWidth - margin, y);
         y += 10;
 
         section.fields.forEach(field => {
-          checkPageBreak(lineHeight * 2);
+          const questionLines = pdf.splitTextToSize(field.label, maxLineWidth);
+          const answer = formData[field.id] || 'Non renseigné';
+          const answerLines = pdf.splitTextToSize(answer, maxLineWidth - 4); // Réserve espace pour l'indentation
+          const neededHeight = (questionLines.length * (lineHeight - 2)) + (answerLines.length * lineHeight) + 12;
+          checkPageBreak(neededHeight);
+
           pdf.setFontSize(11);
           pdf.setFont('helvetica', 'bold');
-          const questionLines = pdf.splitTextToSize(field.label, maxLineWidth);
+          pdf.setTextColor(0, 0, 0);
           pdf.text(questionLines, margin, y);
-          y += questionLines.length * (lineHeight - 2);
+          y += questionLines.length * (lineHeight - 2) + 3;
 
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(80, 80, 80);
-          const answer = formData[field.id] || 'Non renseigné';
-          const answerLines = pdf.splitTextToSize(answer, maxLineWidth);
-          pdf.text(answerLines, margin, y);
-          y += answerLines.length * lineHeight + 7;
-          pdf.setTextColor(0, 0, 0);
+          const answerHeight = answerLines.length * lineHeight;
+
+          // Dessine une bordure à gauche pour l'élégance
+          pdf.setDrawColor(156, 163, 175); // gray-400
+          pdf.setLineWidth(0.8);
+          pdf.line(margin, y - 2, margin, y + answerHeight - 5);
+
+          pdf.text(answerLines, margin + 3, y);
+          y += answerHeight + 7;
         });
         y += 5;
       });
@@ -297,9 +355,11 @@ export default function App() {
       checkPageBreak(30);
       y += 10;
       pdf.setLineWidth(0.2);
+      pdf.setDrawColor(209, 213, 219); // gray-300
       pdf.line(margin, y, pdfWidth - margin, y);
       y += 10;
       pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
       pdf.text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, margin, y);
       if (formData.consent) {
         pdf.setTextColor(0, 128, 0);
