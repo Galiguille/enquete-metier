@@ -214,27 +214,57 @@ export default function App() {
     }
 
     setIsGenerating(true);
+    
+    // On récupère les éléments
     const input = document.querySelector('.print-container');
-    
-    // Gestion visibilité mobile : si l'aperçu est caché, on le rend visible temporairement pour la capture
     const previewWrapper = document.querySelector('.preview-wrapper');
-    const wasHidden = previewWrapper && previewWrapper.classList.contains('hidden');
     
-    if (wasHidden) {
-      previewWrapper.classList.remove('hidden');
-      // On le sort du flux visuel pour ne pas casser l'interface mobile pendant la génération
-      previewWrapper.style.position = 'absolute';
-      previewWrapper.style.left = '-9999px';
-      previewWrapper.style.top = '0';
-      previewWrapper.style.display = 'block';
-    }
+    // Sauvegarde des styles originaux
+    const originalInputStyle = {
+      width: input.style.width,
+      maxWidth: input.style.maxWidth,
+      padding: input.style.padding,
+      margin: input.style.margin,
+      boxShadow: input.style.boxShadow
+    };
+    
+    const originalWrapperStyle = {
+      position: previewWrapper.style.position,
+      left: previewWrapper.style.left,
+      top: previewWrapper.style.top,
+      width: previewWrapper.style.width,
+      height: previewWrapper.style.height,
+      overflow: previewWrapper.style.overflow,
+      display: previewWrapper.style.display,
+      zIndex: previewWrapper.style.zIndex
+    };
+
+    // Application des styles temporaires pour la génération (Format A4 Desktop)
+    // On déplace le wrapper hors écran pour éviter les clignotements et permettre la pleine largeur
+    previewWrapper.classList.remove('hidden');
+    previewWrapper.style.position = 'fixed';
+    previewWrapper.style.left = '-10000px';
+    previewWrapper.style.top = '0';
+    previewWrapper.style.width = 'auto';
+    previewWrapper.style.height = 'auto';
+    previewWrapper.style.overflow = 'visible';
+    previewWrapper.style.display = 'block';
+    previewWrapper.style.zIndex = '-1000';
+
+    // On force les dimensions et marges du document pour un rendu PDF parfait
+    input.style.width = '210mm';
+    input.style.maxWidth = 'none';
+    input.style.padding = '20mm'; // Marges généreuses (environ 2cm)
+    input.style.margin = '0';
+    input.style.boxShadow = 'none';
 
     try {
       // 1. Capture du document en image
       const canvas = await html2canvas(input, {
         scale: 2, // Meilleure qualité
         useCORS: true,
-        logging: false
+        logging: false,
+        windowWidth: 1200 // Force le rendu en mode "Desktop"
       });
 
       // 2. Création du PDF
@@ -283,13 +313,28 @@ export default function App() {
       console.error("Erreur lors de la génération :", error);
       alert("Une erreur est survenue lors de la création du PDF, veuillez réessayer.");
     } finally {
-      // Nettoyage
-      if (wasHidden) {
+      // Restauration des styles
+      input.style.width = originalInputStyle.width;
+      input.style.maxWidth = originalInputStyle.maxWidth;
+      input.style.padding = originalInputStyle.padding;
+      input.style.margin = originalInputStyle.margin;
+      input.style.boxShadow = originalInputStyle.boxShadow;
+
+      previewWrapper.style.position = originalWrapperStyle.position;
+      previewWrapper.style.left = originalWrapperStyle.left;
+      previewWrapper.style.top = originalWrapperStyle.top;
+      previewWrapper.style.width = originalWrapperStyle.width;
+      previewWrapper.style.height = originalWrapperStyle.height;
+      previewWrapper.style.overflow = originalWrapperStyle.overflow;
+      previewWrapper.style.zIndex = originalWrapperStyle.zIndex;
+      previewWrapper.style.display = originalWrapperStyle.display;
+
+      // Restauration de la visibilité correcte selon l'onglet actif
+      const shouldBeHidden = activeTab !== 'preview' && !isFullscreenPreview;
+      if (shouldBeHidden) {
         previewWrapper.classList.add('hidden');
-        previewWrapper.style.position = '';
-        previewWrapper.style.left = '';
-        previewWrapper.style.top = '';
-        previewWrapper.style.display = '';
+      } else {
+        previewWrapper.classList.remove('hidden');
       }
       setIsGenerating(false);
     }
