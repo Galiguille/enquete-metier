@@ -393,17 +393,19 @@ export default function App() {
         });
       } else {
         // Fallback pour les navigateurs classiques (Chrome Desktop, etc.)
-        pdf.save("enquete-metier.pdf");
         
-        // On utilise des délais pour éviter que l'alerte ne bloque l'ouverture du client mail
+        // Stratégie inversée : On ouvre le mail D'ABORD, puis on télécharge.
+        // Cela évite que la fenêtre de sauvegarde du fichier (Save As) ne bloque l'ouverture du mail.
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+        
         setTimeout(() => {
-          const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-          window.location.href = mailtoLink;
+          pdf.save("enquete-metier.pdf");
           
           setTimeout(() => {
-            alert("Le PDF a été téléchargé.\n\nVotre logiciel de messagerie devrait s'être ouvert. Veuillez y joindre le fichier PDF téléchargé.");
+            alert("Le PDF a été téléchargé.\n\nVotre logiciel de messagerie devrait s'être ouvert. N'oubliez pas d'y joindre le fichier qui vient d'être téléchargé.");
           }, 1000);
-        }, 500);
+        }, 1000);
       }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
