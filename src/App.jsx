@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 const sections = [
   {
@@ -214,82 +213,102 @@ export default function App() {
     }
 
     setIsGenerating(true);
-    
-    // On récupère les éléments
-    const input = document.querySelector('.print-container');
-    const previewWrapper = document.querySelector('.preview-wrapper');
-    
-    // Sauvegarde des styles originaux
-    const originalInputStyle = {
-      width: input.style.width,
-      maxWidth: input.style.maxWidth,
-      padding: input.style.padding,
-      margin: input.style.margin,
-      boxShadow: input.style.boxShadow
-    };
-    
-    const originalWrapperStyle = {
-      position: previewWrapper.style.position,
-      left: previewWrapper.style.left,
-      top: previewWrapper.style.top,
-      width: previewWrapper.style.width,
-      height: previewWrapper.style.height,
-      overflow: previewWrapper.style.overflow,
-      display: previewWrapper.style.display,
-      zIndex: previewWrapper.style.zIndex
-    };
-
-    // Application des styles temporaires pour la génération (Format A4 Desktop)
-    // On déplace le wrapper hors écran pour éviter les clignotements et permettre la pleine largeur
-    previewWrapper.classList.remove('hidden');
-    previewWrapper.style.position = 'fixed';
-    previewWrapper.style.left = '-10000px';
-    previewWrapper.style.top = '0';
-    previewWrapper.style.width = 'auto';
-    previewWrapper.style.height = 'auto';
-    previewWrapper.style.overflow = 'visible';
-    previewWrapper.style.display = 'block';
-    previewWrapper.style.zIndex = '-1000';
-
-    // On force les dimensions et marges du document pour un rendu PDF parfait
-    input.style.width = '210mm';
-    input.style.maxWidth = 'none';
-    input.style.padding = '20mm'; // Marges généreuses (environ 2cm)
-    input.style.margin = '0';
-    input.style.boxShadow = 'none';
 
     try {
-      // 1. Capture du document en image
-      const canvas = await html2canvas(input, {
-        scale: 2, // Meilleure qualité
-        useCORS: true,
-        logging: false,
-        windowWidth: 1200 // Force le rendu en mode "Desktop"
-      });
-
-      // 2. Création du PDF
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      // Gestion multipage simplifiée (si le contenu dépasse une page A4)
-      let heightLeft = pdfImgHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
-      heightLeft -= pdfHeight;
+      const margin = 20;
+      const maxLineWidth = pdfWidth - margin * 2;
+      const lineHeight = 7;
+      let y = margin;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfImgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
-        heightLeft -= pdfHeight;
+      const checkPageBreak = (neededHeight = 0) => {
+        if (y + neededHeight > pdfHeight - margin) {
+          pdf.addPage();
+          y = margin;
+        }
+      };
+
+      // --- Construction du PDF ---
+
+      // Titre
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text("Enquête Métier", pdfWidth / 2, y, { align: 'center' });
+      y += 15;
+
+      // Motivation
+      checkPageBreak(40);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text("Motivation", margin, y);
+      y += 5;
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, y, pdfWidth - margin, y);
+      y += 10;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      const motivationText = [
+        "Bonjour Madame, Mademoiselle, Monsieur,",
+        "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
+        "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.",
+        "Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).\nVotre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur."
+      ];
+      motivationText.forEach(para => {
+        const lines = pdf.splitTextToSize(para, maxLineWidth);
+        pdf.text(lines, margin, y);
+        y += lines.length * (lineHeight - 1) + 3;
+      });
+      y += 10;
+
+      // Sections et réponses
+      sections.forEach((section) => {
+        checkPageBreak(20);
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(section.title, margin, y);
+        y += 5;
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, y, pdfWidth - margin, y);
+        y += 10;
+
+        section.fields.forEach(field => {
+          checkPageBreak(lineHeight * 2);
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          const questionLines = pdf.splitTextToSize(field.label, maxLineWidth);
+          pdf.text(questionLines, margin, y);
+          y += questionLines.length * (lineHeight - 2);
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(80, 80, 80);
+          const answer = formData[field.id] || 'Non renseigné';
+          const answerLines = pdf.splitTextToSize(answer, maxLineWidth);
+          pdf.text(answerLines, margin, y);
+          y += answerLines.length * lineHeight + 7;
+          pdf.setTextColor(0, 0, 0);
+        });
+        y += 5;
+      });
+      
+      // Section Signature
+      checkPageBreak(30);
+      y += 10;
+      pdf.setLineWidth(0.2);
+      pdf.line(margin, y, pdfWidth - margin, y);
+      y += 10;
+      pdf.setFontSize(10);
+      pdf.text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, margin, y);
+      if (formData.consent) {
+        pdf.setTextColor(0, 128, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text("✓ Consentement validé", margin, y + lineHeight);
+        pdf.setTextColor(0, 0, 0);
       }
 
-      // 3. Envoi ou Téléchargement
+      // Envoi ou Téléchargement
       const blob = pdf.output('blob');
       const file = new File([blob], "enquete-metier.pdf", { type: "application/pdf" });
       const subject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
@@ -311,31 +330,8 @@ export default function App() {
       }
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
-      alert("Une erreur est survenue lors de la création du PDF, veuillez réessayer.");
+      alert("Une erreur est survenue lors de la création du PDF.");
     } finally {
-      // Restauration des styles
-      input.style.width = originalInputStyle.width;
-      input.style.maxWidth = originalInputStyle.maxWidth;
-      input.style.padding = originalInputStyle.padding;
-      input.style.margin = originalInputStyle.margin;
-      input.style.boxShadow = originalInputStyle.boxShadow;
-
-      previewWrapper.style.position = originalWrapperStyle.position;
-      previewWrapper.style.left = originalWrapperStyle.left;
-      previewWrapper.style.top = originalWrapperStyle.top;
-      previewWrapper.style.width = originalWrapperStyle.width;
-      previewWrapper.style.height = originalWrapperStyle.height;
-      previewWrapper.style.overflow = originalWrapperStyle.overflow;
-      previewWrapper.style.zIndex = originalWrapperStyle.zIndex;
-      previewWrapper.style.display = originalWrapperStyle.display;
-
-      // Restauration de la visibilité correcte selon l'onglet actif
-      const shouldBeHidden = activeTab !== 'preview' && !isFullscreenPreview;
-      if (shouldBeHidden) {
-        previewWrapper.classList.add('hidden');
-      } else {
-        previewWrapper.classList.remove('hidden');
-      }
       setIsGenerating(false);
     }
   };
