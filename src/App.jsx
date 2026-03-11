@@ -1,63 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
-
-const sections = [
-  {
-    id: 'intro',
-    title: 'Informations Générales',
-    fields: [
-      { id: 'entreprise', label: 'Entreprise ou organisme', type: 'input' },
-      { id: 'adresse', label: 'Adresse', type: 'input' },
-      { id: 'telephone', label: 'Téléphone', type: 'input' },
-      { id: 'personne', label: 'Nom de la personne rencontrée', type: 'input' },
-      { id: 'posteOccupe', label: 'Poste occupé', type: 'input' },
-      { id: 'posteEnquete', label: "Poste sur lequel porte l'enquête", type: 'input' },
-    ]
-  },
-  {
-    id: 'acces',
-    title: "Conditions d'accès",
-    fields: [
-      { id: 'tempsTravail', label: 'Depuis combien de temps faites-vous ce travail ?', type: 'textarea' },
-      { id: 'arrivePoste', label: 'Comment êtes-vous arrivé à ce poste ?', type: 'textarea' },
-      { id: 'formation', label: 'Quelle formation avez-vous ?', type: 'textarea' },
-      { id: 'diplomeExige', label: "Y a-t-il un diplôme exigé pour ce poste ? Si oui, lequel ?", type: 'textarea' },
-      { id: 'centresFormation', label: 'Connaissez-vous les centres qui dispensent cette formation ?', type: 'textarea' },
-      { id: 'concours', label: "Si le recrutement se fait par concours, quelles sont les conditions et le niveau pour s'y présenter ?", type: 'textarea' },
-      { id: 'qualites', label: 'Selon vous, quelles qualités sont nécessaires pour exercer ce métier ?', type: 'textarea' },
-    ]
-  },
-  {
-    id: 'contenu',
-    title: 'Contenu du poste',
-    fields: [
-      { id: 'consisteTravail', label: 'En quoi consiste le travail ?', type: 'textarea' },
-      { id: 'ensembleTaches', label: "Pouvez-vous décrire l'ensemble des tâches ?", type: 'textarea' },
-      { id: 'attraits', label: "Qu'est-ce qui vous a attiré dans ce métier, les aspects positifs ?", type: 'textarea' },
-      { id: 'contraintes', label: 'Quelles sont les contraintes, les aspects plus difficiles ?', type: 'textarea' },
-      { id: 'travailEquipe', label: "S'agit-il d'un travail d'équipe ? Si oui, préciser.", type: 'textarea' },
-      { id: 'professionnelsExt', label: "Êtes-vous amené à travailler avec des professionnels extérieurs à l'entreprise ? Si oui, lesquels ?", type: 'textarea' },
-    ]
-  },
-  {
-    id: 'conditions',
-    title: 'Conditions de travail',
-    fields: [
-      { id: 'horaires', label: 'Quels sont les horaires & jours ?', type: 'textarea' },
-      { id: 'heuresSemaine', label: 'Combien d\'heures de travail par semaine ?', type: 'input' },
-      { id: 'salaire', label: 'Le salaire pour un débutant ?', type: 'input' },
-      { id: 'tenue', label: 'Faut-il avoir une tenue particulière ?', type: 'textarea' },
-      { id: 'contreIndications', label: "D'après vous, y a-t-il des contre-indications à la réalisation de ce métier (problème de santé, disponibilité...) ?", type: 'textarea' },
-      { id: 'debouches', label: "Pensez-vous qu'il y ait actuellement des débouchés ?", type: 'textarea' },
-      { id: 'recrutement', label: "Comment recrute l'entreprise ou l'organisme (annonces, Pôle emploi...) ?", type: 'textarea' },
-      { id: 'criteres', label: 'Quels sont les critères de sélection ? (expérience, stage, formation, esprit d\'initiative...)', type: 'textarea' },
-      { id: 'conservationCV', label: 'Combien de temps gardez-vous les CV qui vous sont envoyés ?', type: 'textarea' },
-      { id: 'typeContrat', label: 'Quels types de contrat propose votre société ?', type: 'textarea' },
-      { id: 'personneRecrutement', label: 'Quelle est la personne en charge du recrutement au sein de votre entité ?', type: 'input' },
-      { id: 'immersion', label: "Seriez-vous prêt(e) à accueillir dans votre entreprise un demandeur d'emploi pour découvrir ce métier (convention de stage gratuite de 5 à 10 jours, mise en place par Pôle emploi) ? (Immersion professionnelle)", type: 'textarea' },
-    ]
-  }
-];
+import { sections } from './data/sections';
 
 // Icônes intégrées (SVG)
 const IconPrinter = () => (
@@ -75,6 +18,9 @@ const IconChevron = () => (
 const IconMail = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
 );
+const IconMailLarge = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+);
 const IconMic = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
 );
@@ -82,7 +28,7 @@ const IconEye = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
 );
 const IconWhatsApp = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.38 0 0 1 8 8v.5z"></path></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.4c-1.5-1.5-3.5-2.3-5.6-2.3-4.4 0-8 3.6-8 8 0 1.4.4 2.8 1.1 4.1L2 22l4.3-1.4c1.2.7 2.6 1.1 4.1 1.1h.1c4.4 0 8-3.6 8-8 0-2.1-.8-4.1-2.3-5.6zm-5.6 13.1c-1.3 0-2.6-.3-3.8-1l-.3-.1-3 1 1-2.9-.2-.3c-.7-1.2-1.1-2.5-1.1-3.9 0-3.7 3-6.7 6.7-6.7 1.8 0 3.5.7 4.8 2 1.3 1.3 2 3 2 4.8 0 3.7-3 6.7-6.7 6.7zm3.7-5.1c-.2-.1-1.3-.6-1.5-.7-.2 0-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.1-.3.2-.5.1-.2-.1-1-.3-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.4.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4-.1-.2-.4-1-.6-1.3-.1-.4-.3-.3-.4-.3h-.5c-.2 0-.5.1-.7.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2 1 2.3.2.2 1.3.3 2.3.3h.1c1 0 3.2-.4 3.7-1.9.2-.7.2-1.3.1-1.4-.1-.1-.3-.2-.5-.3z"></path></svg>
 );
 const IconTelegram = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -92,24 +38,19 @@ const IconSMS = () => (
 );
 
 // Helper pour charger les images pour le PDF
-const loadImageAsDataURI = (url) => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = () => {
-      console.error(`Impossible de charger l'image pour le PDF: ${url}`);
-      resolve(null); // On continue même si une image manque
-    };
-    img.src = new URL(url, window.location.origin).href;
-  });
+const loadImageAsDataURI = async (path) => {
+  try {
+    const response = await fetch(path);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn(`Impossible de charger l'image: ${path}`, error);
+    return null;
+  }
 };
 
 export default function App() {
@@ -121,6 +62,7 @@ export default function App() {
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
+  const [currentDate, setCurrentDate] = useState('');
   const recognitionRef = useRef(null);
 
   useEffect(() => {
@@ -132,6 +74,9 @@ export default function App() {
       document.head.appendChild(meta);
     }
     meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+    
+    // Set current date
+    setCurrentDate(new Date().toLocaleDateString('fr-FR'));
   }, []);
 
   // Restauration et sauvegarde automatique des données
@@ -158,7 +103,11 @@ export default function App() {
 
   useEffect(() => {
     // À chaque modification du formulaire, on sauvegarde les données
-    localStorage.setItem('enqueteFormData', JSON.stringify(formData));
+    try {
+      localStorage.setItem('enqueteFormData', JSON.stringify(formData));
+    } catch (e) {
+      // Ignore les erreurs de quota ou de navigation privée
+    }
   }, [formData]); // S'exécute à chaque fois que formData change
 
   const handleChange = (id, value) => {
@@ -228,6 +177,15 @@ export default function App() {
   // Préparation des messages de partage
   const shareSubject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
   const shareBody = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
+
+  // Vérification sécurisée du support de partage de fichiers
+  const canSharePdf = () => {
+    try {
+      return navigator.canShare && pdfFile && navigator.canShare({ files: [pdfFile] });
+    } catch (e) {
+      return false;
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -714,7 +672,7 @@ export default function App() {
             <div className="mt-8 pt-4 border-t-2 border-gray-200 page-break">
               <div className="flex justify-between items-end">
                 <div className="text-sm text-gray-600">
-                  <p>Fait le {new Date().toLocaleDateString('fr-FR')}</p>
+                  <p>Fait le {currentDate}</p>
                   {formData.consent ? <p className="text-emerald-700 font-bold mt-1">✓ Consentement validé</p> : <p className="text-red-400 text-xs mt-1">Consentement en attente</p>}
                 </div>
               </div>
@@ -751,8 +709,8 @@ export default function App() {
             </div>
 
             {/* Bouton de Partage Natif (Visible uniquement si supporté, ex: Mobile) */}
-            {navigator.canShare && pdfFile && navigator.canShare({ files: [pdfFile] }) && (
-              <button 
+            {canSharePdf() && (
+              <button
                 onClick={async () => {
                   try {
                     await navigator.share({
@@ -764,14 +722,14 @@ export default function App() {
                 }}
                 className="w-full mb-4 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
                 Partager le fichier directement
               </button>
             )}
 
             <div className="grid grid-cols-2 gap-3">
               <a href={`mailto:?subject=${encodeURIComponent(shareSubject)}&body=${encodeURIComponent(shareBody)}`} className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 text-gray-700 group">
-                <div className="group-hover:scale-110 transition-transform"><IconMail /></div>
+                <div className="group-hover:scale-110 transition-transform"><IconMailLarge /></div>
                 <span className="mt-2 text-sm font-medium">Email</span>
               </a>
               <a href={`https://wa.me/?text=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-200 text-green-700 group">
