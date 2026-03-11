@@ -1,114 +1,63 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
+import { 
+  FileText, Edit, Eye, Mail, Printer, Mic, ChevronDown 
+} from 'lucide-react';
 import { sections } from './data/sections';
+import { loadImageAsDataURI } from './utils/imageLoader';
 
-// Icônes intégrées (SVG)
-const IconPrinter = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-);
-const IconFileText = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-);
-const IconEdit = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-);
-const IconChevron = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-);
-const IconMail = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-);
+// Créer des aliases pour les icônes
+const IconFileText = FileText;
+const IconEdit = Edit;
+const IconEye = Eye;
+const IconMail = Mail;
+const IconPrinter = Printer;
+const IconMic = Mic;
+const IconChevron = ChevronDown;
+
+// SVG inline pour les grandes icônes de partage
 const IconMailLarge = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-);
-const IconMic = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-);
-const IconEye = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>
 );
 const IconWhatsApp = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.4c-1.5-1.5-3.5-2.3-5.6-2.3-4.4 0-8 3.6-8 8 0 1.4.4 2.8 1.1 4.1L2 22l4.3-1.4c1.2.7 2.6 1.1 4.1 1.1h.1c4.4 0 8-3.6 8-8 0-2.1-.8-4.1-2.3-5.6zm-5.6 13.1c-1.3 0-2.6-.3-3.8-1l-.3-.1-3 1 1-2.9-.2-.3c-.7-1.2-1.1-2.5-1.1-3.9 0-3.7 3-6.7 6.7-6.7 1.8 0 3.5.7 4.8 2 1.3 1.3 2 3 2 4.8 0 3.7-3 6.7-6.7 6.7zm3.7-5.1c-.2-.1-1.3-.6-1.5-.7-.2 0-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.1-.3.2-.5.1-.2-.1-1-.3-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.4.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4-.1-.2-.4-1-.6-1.3-.1-.4-.3-.3-.4-.3h-.5c-.2 0-.5.1-.7.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2 1 2.3.2.2 1.3.3 2.3.3h.1c1 0 3.2-.4 3.7-1.9.2-.7.2-1.3.1-1.4-.1-.1-.3-.2-.5-.3z"></path></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.255.949c-1.238.503-2.39 1.242-3.286 2.128-1.797 1.809-2.823 4.228-2.823 6.797 0 1.098.137 2.199.406 3.267l-.648 2.365 2.426-.651c.959.577 2.01.877 3.074.877 1.087 0 2.145-.289 3.092-.836 1.238-.503 2.39-1.242 3.286-2.128 1.797-1.809 2.823-4.228 2.823-6.797 0-1.098-.137-2.199-.406-3.267l.648-2.365-2.426.651z"></path></svg>
 );
 const IconTelegram = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m3.75 9.79L9.48 15.05c-.35.27-.8.42-1.23.42-.43 0-.88-.15-1.23-.42l-5.27-4.26c-.52-.48-.52-1.3 0-1.78l5.27-4.26c.35-.27.8-.42 1.23-.42.43 0 .88.15 1.23.42l5.27 4.26c.52.48.52 1.3 0 1.78z"></path></svg>
 );
 const IconSMS = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 );
 
-// Helper pour charger les images pour le PDF
-const loadImageAsDataURI = async (path) => {
-  try {
-    const response = await fetch(path);
-    const blob = await response.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.warn(`Impossible de charger l'image: ${path}`, error);
-    return null;
-  }
-};
-
 export default function App() {
-  const [formData, setFormData] = useState({});
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('enquete-metier-data');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
   const [activeTab, setActiveTab] = useState('form');
-  const [listeningField, setListeningField] = useState(null);
-  const [highlightConsent, setHighlightConsent] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [listeningField, setListeningField] = useState(null);
+  const [highlightConsent, setHighlightConsent] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
-  const [currentDate, setCurrentDate] = useState('');
+  
   const recognitionRef = useRef(null);
+  const currentDate = new Date().toLocaleDateString('fr-FR');
 
+  // Sauvegarde automatique dans localStorage
   useEffect(() => {
-    // Force le viewport pour s'adapter aux écrans mobiles (ex: Motorola G200)
-    let meta = document.querySelector('meta[name="viewport"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = "viewport";
-      document.head.appendChild(meta);
-    }
-    meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-    
-    // Set current date
-    setCurrentDate(new Date().toLocaleDateString('fr-FR'));
-  }, []);
-
-  // Restauration et sauvegarde automatique des données
-  useEffect(() => {
-    // Au chargement, on essaie de restaurer les données
     try {
-      const savedData = localStorage.getItem('enqueteFormData');
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        if (Object.keys(parsedData).length > 0) {
-          if (window.confirm("Une session précédente a été trouvée. Voulez-vous restaurer les données saisies ?")) {
-            setFormData(parsedData);
-          } else {
-            // Si l'utilisateur refuse, on nettoie le stockage pour la prochaine fois
-            localStorage.removeItem('enqueteFormData');
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la restauration depuis le localStorage:", error);
-      localStorage.removeItem('enqueteFormData');
-    }
-  }, []); // Ne s'exécute qu'une seule fois au montage
-
-  useEffect(() => {
-    // À chaque modification du formulaire, on sauvegarde les données
-    try {
-      localStorage.setItem('enqueteFormData', JSON.stringify(formData));
+      localStorage.setItem('enquete-metier-data', JSON.stringify(formData));
     } catch (e) {
-      // Ignore les erreurs de quota ou de navigation privée
+      // Silencieusement ignoré (navigation privée, quota dépassé, etc.)
     }
-  }, [formData]); // S'exécute à chaque fois que formData change
+  }, [formData]);
 
   const handleChange = (id, value) => {
     setFormData(prev => ({
@@ -280,7 +229,7 @@ export default function App() {
       const motivationText = [
         "Bonjour Madame, Mademoiselle, Monsieur,",
         "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
-        "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.",
+        "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant de bien vouloir accepter de répondre à un questionnaire.",
         "Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).\nVotre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur."
       ];
       motivationText.forEach(para => {
@@ -292,8 +241,11 @@ export default function App() {
       y += 10;
 
       // Sections et réponses
+      let y = margin + logoHeight + 10; // Déclarez une fois avant
+
       sections.forEach((section) => {
         checkPageBreak(20);
+        
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(49, 46, 129); // text-blue-900
