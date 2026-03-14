@@ -24,6 +24,8 @@ const i18n = {
     form: "Formulaire",
     preview: "Aperçu",
     edit: "Éditer",
+    editFullscreen: "Revenir à l'édition",
+    seeFullscreen: "Voir le document en plein écran",
     fullscreen: "Plein Écran",
     generating: "Génération...",
     sendPdf: "Envoyer PDF",
@@ -64,13 +66,16 @@ const i18n = {
     shareWhatsapp: "Partager par WhatsApp",
     shareTelegram: "Partager par Telegram",
     shareSms: "Partager par SMS",
-    newSurvey: "Nouvelle enquête"
+    newSurvey: "Nouvelle enquête",
+    changeLanguage: "Changer de langue"
   },
   en: {
     title: "Job Survey Tool",
     form: "Form",
     preview: "Preview",
     edit: "Edit",
+    editFullscreen: "Return to editing",
+    seeFullscreen: "View document in fullscreen",
     fullscreen: "Fullscreen",
     generating: "Generating...",
     sendPdf: "Send PDF",
@@ -111,7 +116,8 @@ const i18n = {
     shareWhatsapp: "Share via WhatsApp",
     shareTelegram: "Share via Telegram",
     shareSms: "Share via SMS",
-    newSurvey: "New survey"
+    newSurvey: "New survey",
+    changeLanguage: "Change language"
   }
 };
 
@@ -400,7 +406,7 @@ export default function App() {
                                 ? 'bg-red-100 text-red-600 animate-pulse ring-2 ring-red-400' 
                                 : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
                             }`}
-                            title={dict.dictate}
+                            title={dict.dictate} aria-label={dict.dictate}
                           >
                             <Mic />
                           </button>
@@ -483,32 +489,14 @@ export default function App() {
 
             <div className="mb-10 page-break">
               <h2 className="text-xl font-bold mb-6 text-gray-800 border-b border-gray-300 pb-2">{dict.surveyTitle}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[0].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.entreprise || ''}</span>
-                </div>
-                <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[1].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.adresse || ''}</span>
-                </div>
-                <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[2].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.telephone || ''}</span>
-                </div>
-                <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[3].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.personne || ''}</span>
-                </div>
-                <div className="border-b border-gray-300 pb-1 md:col-span-2">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[4].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.posteOccupe || ''}</span>
-                </div>
-                <div className="border-b border-gray-300 pb-1 md:col-span-2">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[5].label}</span>
-                  <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.posteEnquete || ''}</span>
-                </div>
-              </div>
+              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {sections[lang][0].fields.map(field => (
+                  <div key={`preview-${field.id}`} className={`border-b border-gray-300 pb-1 ${['posteOccupe', 'posteEnquete'].includes(field.id) ? 'md:col-span-2' : ''}`}>
+                    <dt className="font-semibold block text-xs text-gray-500 uppercase">{field.label}</dt>
+                    <dd className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData[field.id] || ''}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
             {sections[lang].slice(1).map((section) => (
@@ -570,7 +558,7 @@ const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenP
         {dict.title}
       </h1>
       <div className="flex gap-2 flex-wrap justify-center">
-        <button onClick={() => setLang(l => l === 'fr' ? 'en' : 'fr')} className="md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors bg-blue-800 hover:bg-blue-700" title="Changer de langue">
+        <button onClick={() => setLang(l => l === 'fr' ? 'en' : 'fr')} className="md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors bg-blue-800 hover:bg-blue-700" title={dict.changeLanguage} aria-label={dict.changeLanguage}>
           <Globe size={18} /> <span className="hidden lg:inline">{lang === 'fr' ? 'EN' : 'FR'}</span>
         </button>
         <button onClick={() => setActiveTab('form')} className={`md:hidden px-3 py-2 rounded-md flex items-center gap-2 text-sm ${activeTab === 'form' ? 'bg-blue-700' : 'bg-blue-800'}`}>
@@ -579,7 +567,7 @@ const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenP
         <button onClick={() => setActiveTab('preview')} className={`md:hidden px-3 py-2 rounded-md flex items-center gap-2 text-sm ${activeTab === 'preview' ? 'bg-blue-700' : 'bg-blue-800'}`}>
           <FileText /> {dict.preview}
         </button>
-        <button onClick={() => setIsFullscreenPreview(!isFullscreenPreview)} className={`hidden md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors ${isFullscreenPreview ? 'bg-blue-700 ring-2 ring-blue-400' : 'bg-blue-800 hover:bg-blue-700'}`} title={isFullscreenPreview ? "Revenir à l'édition" : "Voir le document en plein écran"}>
+        <button onClick={() => setIsFullscreenPreview(!isFullscreenPreview)} className={`hidden md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors ${isFullscreenPreview ? 'bg-blue-700 ring-2 ring-blue-400' : 'bg-blue-800 hover:bg-blue-700'}`} title={isFullscreenPreview ? dict.editFullscreen : dict.seeFullscreen} aria-label={isFullscreenPreview ? dict.editFullscreen : dict.seeFullscreen}>
           {isFullscreenPreview ? <Edit /> : <Eye />} <span className="hidden lg:inline">{isFullscreenPreview ? dict.edit : dict.fullscreen}</span>
         </button>
         <button onClick={onGenerateAndShare} disabled={isGenerating} className={`${isGenerating ? 'bg-gray-400 cursor-wait' : 'bg-sky-600 hover:bg-sky-500'} text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium`}>
@@ -638,12 +626,12 @@ const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBo
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"><X /></button>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+      <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100" >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1" aria-label={dict.close}><X /></button>
         <div className="text-center mb-6">
-          <div className="mx-auto bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-sm"><Download size={32} /></div>
-          <h3 className="text-xl font-bold text-gray-900">{dict.downloaded}</h3>
+          <div className="mx-auto bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-sm" aria-hidden="true"><Download size={32} /></div>
+          <h3 id="share-modal-title" className="text-xl font-bold text-gray-900">{dict.downloaded}</h3>
           <p className="text-gray-500 mt-2 text-sm leading-relaxed">{dict.downloadDesc} <strong>{dict.attachFile}</strong>{dict.downloadDescEnd}</p>
         </div>
         {canSharePdf && (
