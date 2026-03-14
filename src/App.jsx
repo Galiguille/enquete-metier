@@ -67,7 +67,8 @@ const i18n = {
     shareTelegram: "Partager par Telegram",
     shareSms: "Partager par SMS",
     newSurvey: "Nouvelle enquête",
-    changeLanguage: "Changer de langue"
+    changeLanguage: "Changer de langue",
+    contactMe: "Des questions ou des suggestions ? Contactez-moi :"
   },
   en: {
     title: "Job Survey Tool",
@@ -117,7 +118,8 @@ const i18n = {
     shareTelegram: "Share via Telegram",
     shareSms: "Share via SMS",
     newSurvey: "New survey",
-    changeLanguage: "Change language"
+    changeLanguage: "Change language",
+    contactMe: "Questions or suggestions? Contact me:"
   }
 };
 
@@ -439,6 +441,22 @@ export default function App() {
                   {dict.consentText}
                 </span>
               </label>
+            </div>
+
+            {/* Contact Section */}
+            <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <h3 className="text-sm font-bold text-gray-700 mb-3">{dict.contactMe}</h3>
+              <div className="flex flex-wrap gap-3">
+                <a href="mailto:galiguille@gmail.com" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                  <Mail size={16} /> Email
+                </a>
+                <a href="https://wa.me/33782202277" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                  <span className="w-4 h-4 flex justify-center items-center [&>svg]:w-4 [&>svg]:h-4"><IconWhatsApp /></span> WhatsApp
+                </a>
+                <a href="sms:+33782202277" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                  <MessageSquare size={16} /> SMS
+                </a>
+              </div>
             </div>
 
             {/* Bouton Voir Aperçu (Mobile) */}
