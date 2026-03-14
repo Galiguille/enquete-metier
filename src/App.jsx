@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import { 
-  FileText, Edit, Eye, Mail, Printer, Mic, ChevronDown, Download, Share2, X, MessageSquare
+  FileText, Edit, Eye, Mail, Printer, Mic, ChevronDown, Download, Share2, X, MessageSquare, Globe
 } from 'lucide-react';
 import { sections } from './data/sections';
 import { loadImageAsDataURI } from './utils/imageLoader';
@@ -18,6 +18,103 @@ const IconTelegram = () => (
   </svg>
 );
 
+const i18n = {
+  fr: {
+    title: "Outil d'Enquête Métier",
+    form: "Formulaire",
+    preview: "Aperçu",
+    edit: "Éditer",
+    fullscreen: "Plein Écran",
+    generating: "Génération...",
+    sendPdf: "Envoyer PDF",
+    printPdf: "Imprimer / PDF",
+    progress: "Progression",
+    inputTitle: "Saisie des réponses",
+    inputDesc: "Remplissez les champs ci-dessous. Le document final se mettra à jour automatiquement à droite.",
+    tip: "Astuce :",
+    tipDesc: "Vous pouvez dicter vos réponses en cliquant sur l'icône micro.",
+    placeholder: "Votre réponse...",
+    dictate: "Dicter la réponse",
+    consentText: "En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD) (aucune information reste stockée sur serveur ou ordinateur).",
+    viewPreview: "Voir l'aperçu du document",
+    pdfTitle: "Enquête Métier",
+    motivation: "Motivation",
+    para1: "Bonjour Madame, Mademoiselle, Monsieur,",
+    para2: "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
+    para3: "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.",
+    para4: "Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).\nVotre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur.",
+    surveyTitle: "Enquête sur les métiers",
+    notProvided: "Non renseigné",
+    doneOn: "Fait le",
+    consentValidated: "✓ Consentement validé",
+    consentPending: "Consentement en attente",
+    thanks1: "Je vous remercie sincèrement du temps précieux que vous m'avez accordé.",
+    thanks2: "Excellente journée.",
+    downloaded: "Document téléchargé !",
+    downloadDesc: "Le PDF a été enregistré. Choisissez comment envoyer le message (n'oubliez pas de",
+    attachFile: "joindre le fichier",
+    downloadDescEnd: ") :",
+    shareDirect: "Partager le fichier directement",
+    close: "Fermer",
+    alertConsent: "Veuillez cocher la case de consentement RGPD pour générer le document.",
+    alertError: "Une erreur est survenue lors de la création du PDF : ",
+    alertSpeech: "Votre navigateur ne supporte pas la reconnaissance vocale. Essayez Chrome, Edge ou Safari.",
+    shareEmail: "Partager par Email",
+    shareEmailShort: "Email",
+    shareWhatsapp: "Partager par WhatsApp",
+    shareTelegram: "Partager par Telegram",
+    shareSms: "Partager par SMS",
+    newSurvey: "Nouvelle enquête"
+  },
+  en: {
+    title: "Job Survey Tool",
+    form: "Form",
+    preview: "Preview",
+    edit: "Edit",
+    fullscreen: "Fullscreen",
+    generating: "Generating...",
+    sendPdf: "Send PDF",
+    printPdf: "Print / PDF",
+    progress: "Progress",
+    inputTitle: "Enter your answers",
+    inputDesc: "Fill in the fields below. The final document will update automatically on the right.",
+    tip: "Tip:",
+    tipDesc: "You can dictate your answers by clicking the microphone icon.",
+    placeholder: "Your answer...",
+    dictate: "Dictate answer",
+    consentText: "By checking this box, I agree that the information entered will be used solely for the educational purpose of this job survey (GDPR) (no information is stored on a server or computer).",
+    viewPreview: "View document preview",
+    pdfTitle: "Job Survey",
+    motivation: "Motivation",
+    para1: "Dear Madam, Dear Sir,",
+    para2: "I am currently reflecting on my professional future and am particularly interested in your profession.",
+    para3: "Therefore, to get the most objective picture of it, I need information on certain aspects of the profession and would be grateful if you would agree to answer a questionnaire.",
+    para4: "I assure you that this will take very little time (about 15 minutes).\nYour opinion is valuable to me and will help me determine my positioning in this sector.",
+    surveyTitle: "Job survey",
+    notProvided: "Not provided",
+    doneOn: "Done on",
+    consentValidated: "✓ Consent validated",
+    consentPending: "Consent pending",
+    thanks1: "I sincerely thank you for the valuable time you have given me.",
+    thanks2: "Have a great day.",
+    downloaded: "Document downloaded!",
+    downloadDesc: "The PDF has been saved. Choose how to send the message (don't forget to",
+    attachFile: "attach the file",
+    downloadDescEnd: "):",
+    shareDirect: "Share file directly",
+    close: "Close",
+    alertConsent: "Please check the GDPR consent box to generate the document.",
+    alertError: "An error occurred while creating the PDF: ",
+    alertSpeech: "Your browser does not support speech recognition. Try Chrome, Edge, or Safari.",
+    shareEmail: "Share via Email",
+    shareEmailShort: "Email",
+    shareWhatsapp: "Share via WhatsApp",
+    shareTelegram: "Share via Telegram",
+    shareSms: "Share via SMS",
+    newSurvey: "New survey"
+  }
+};
+
 export default function App() {
   const [formData, setFormData] = useState(() => {
     try {
@@ -29,6 +126,7 @@ export default function App() {
     }
   });
 
+  const [lang, setLang] = useState('fr');
   const [activeTab, setActiveTab] = useState('form');
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -37,7 +135,8 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const recognitionRef = useRef(null);
-  const [currentDate] = useState(() => new Date().toLocaleDateString('fr-FR'));
+  const currentDate = new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US');
+  const dict = i18n[lang];
 
   // Set viewport meta tag on mount.
   // It's generally better to set this in the public/index.html file.
@@ -71,7 +170,7 @@ export default function App() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      alert("Votre navigateur ne supporte pas la reconnaissance vocale. Essayez Chrome, Edge ou Safari.");
+      alert(dict.alertSpeech);
       return;
     }
 
@@ -88,7 +187,7 @@ export default function App() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR';
+    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -121,16 +220,16 @@ export default function App() {
 
     recognitionRef.current = recognition;
     recognition.start();
-  }, [listeningField]); // Recreate if listeningField changes
+  }, [listeningField, lang, dict]); 
 
   // Calcul de la progression
-  const allFields = sections.flatMap(section => section.fields);
+  const allFields = sections[lang].flatMap(section => section.fields);
   const filledFields = allFields.filter(field => formData[field.id] && formData[field.id].trim().length > 0).length;
   const progress = Math.round((filledFields / allFields.length) * 100);
 
   // Préparation des messages de partage
-  const shareSubject = `Enquête Métier : ${formData.entreprise || 'Nouvelle enquête'}`;
-  const shareBody = `Bonjour,\n\nVeuillez trouver ci-joint le document PDF de l'enquête métier.\n\nCordialement.`;
+  const shareSubject = `${dict.pdfTitle} : ${formData.entreprise || dict.newSurvey}`;
+  const shareBody = `${dict.para1}\n\n${dict.para2}\n\n${dict.para3}`;
 
   // Vérification sécurisée du support de partage de fichiers
   const canSharePdf = () => {
@@ -147,7 +246,7 @@ export default function App() {
 
   const generateAndSharePdf = async () => {
     if (!formData.consent) {
-      alert("Veuillez cocher la case de consentement RGPD pour générer le document.");
+      alert(dict.alertConsent);
       setActiveTab('form'); // Force l'affichage de l'onglet formulaire (utile sur mobile)
       setTimeout(() => {
         const checkbox = document.getElementById('rgpd-checkbox');
@@ -163,13 +262,13 @@ export default function App() {
     setIsGenerating(true);
 
     try {
-      const file = await generatePdfDocument(formData);
+      const file = await generatePdfDocument(formData, lang, dict);
       setPdfFile(file);
       setShowShareModal(true);
     } catch (error) {
       console.error("Erreur lors de la génération :", error);
       if (error.name !== 'AbortError') {
-        alert("Une erreur est survenue lors de la création du PDF : " + (error.message || error));
+        alert(dict.alertError + (error.message || error));
       }
     } finally {
       setIsGenerating(false);
@@ -241,6 +340,9 @@ export default function App() {
         isGenerating={isGenerating}
         onPrint={handlePrint}
         progress={progress}
+        lang={lang}
+        setLang={setLang}
+        dict={dict}
       />
 
       <main className="main-content-area flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -248,17 +350,17 @@ export default function App() {
         {/* COLONNE GAUCHE : FORMULAIRE */}
         <div className={`no-print w-full ${isFullscreenPreview ? 'md:hidden' : 'md:w-1/2 lg:w-5/12'} border-r border-gray-300 bg-white overflow-y-auto ${activeTab === 'form' ? 'block' : 'hidden md:block'}`}>
           <div className="p-4 sm:p-6">
-            <h2 className="text-2xl font-semibold mb-2 text-gray-800 border-b pb-2">Saisie des réponses</h2>
+            <h2 className="text-2xl font-semibold mb-2 text-gray-800 border-b pb-2">{dict.inputTitle}</h2>
             <div className="text-sm text-gray-500 mb-6 space-y-3">
-              <p>Remplissez les champs ci-dessous. Le document final se mettra à jour automatiquement à droite.</p>
+              <p>{dict.inputDesc}</p>
               <div className="flex items-start sm:items-center gap-2 text-blue-700 bg-blue-50 p-3 rounded-lg border border-blue-100">
                 <div className="shrink-0 mt-0.5 sm:mt-0"><Mic /></div>
-                <span><strong>Astuce :</strong> Vous pouvez dicter vos réponses en cliquant sur l'icône micro.</span>
+                <span><strong>{dict.tip}</strong> {dict.tipDesc}</span>
               </div>
             </div>
             
             <div className="space-y-8">
-              {sections.map((section) => (
+              {sections[lang].map((section) => (
                 <div key={section.id} className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
                     <span className="text-blue-500"><ChevronDown /></span>
@@ -276,7 +378,7 @@ export default function App() {
                               id={field.id}
                               rows="3"
                               className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y"
-                              placeholder="Votre réponse..."
+                              placeholder={dict.placeholder}
                               value={formData[field.id] || ''}
                               onChange={(e) => handleChange(field.id, e.target.value)}
                             />
@@ -285,7 +387,7 @@ export default function App() {
                               type="text"
                               id={field.id}
                               className="w-full rounded-md border-gray-300 border p-2 sm:p-3 pr-10 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-                              placeholder="Votre réponse..."
+                              placeholder={dict.placeholder}
                               value={formData[field.id] || ''}
                               onChange={(e) => handleChange(field.id, e.target.value)}
                             />
@@ -298,7 +400,7 @@ export default function App() {
                                 ? 'bg-red-100 text-red-600 animate-pulse ring-2 ring-red-400' 
                                 : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
                             }`}
-                            title="Dicter la réponse"
+                            title={dict.dictate}
                           >
                             <Mic />
                           </button>
@@ -328,7 +430,7 @@ export default function App() {
                   }}
                 />
                 <span className={`text-sm ${highlightConsent ? 'text-red-700 font-bold' : 'text-gray-700'}`}>
-                  En cochant cette case, j'accepte que les informations saisies soient utilisées uniquement dans le cadre pédagogique de cette enquête métier (RGPD) (aucune information reste stockee sur serveur ou ordinateur).
+                  {dict.consentText}
                 </span>
               </label>
             </div>
@@ -339,7 +441,7 @@ export default function App() {
                 onClick={() => setActiveTab('preview')}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 font-bold active:scale-95 transition-transform"
               >
-                <Eye /> Voir l'aperçu du document
+                <Eye /> {dict.viewPreview}
               </button>
             </div>
           </div>
@@ -358,58 +460,58 @@ export default function App() {
 
             <div className="text-center mb-12 page-break">
               <h1 className="text-3xl font-bold text-center mb-8 pb-4 border-b-2 border-gray-300">
-                Enquête Métier
+                {dict.pdfTitle}
               </h1>
             </div>
 
             <div className="mb-10 page-break">
-              <h2 className="text-xl font-bold mb-5 text-gray-800 border-b border-gray-300 pb-2">Motivation</h2>
+              <h2 className="text-xl font-bold mb-5 text-gray-800 border-b border-gray-300 pb-2">{dict.motivation}</h2>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Bonjour Madame, Mademoiselle, Monsieur,
+                {dict.para1}
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.
+                {dict.para2}
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.
+                {dict.para3}
               </p>
               <p className="mb-3 text-justify leading-relaxed text-sm sm:text-base">
-                Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).<br/>
-                Votre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur.
+                {dict.para4.split('\n')[0]}<br/>
+                {dict.para4.split('\n')[1]}
               </p>
             </div>
 
             <div className="mb-10 page-break">
-              <h2 className="text-xl font-bold mb-6 text-gray-800 border-b border-gray-300 pb-2">Enquête sur les métiers</h2>
+              <h2 className="text-xl font-bold mb-6 text-gray-800 border-b border-gray-300 pb-2">{dict.surveyTitle}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Entreprise ou organisme :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[0].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.entreprise || ''}</span>
                 </div>
                 <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Adresse :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[1].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.adresse || ''}</span>
                 </div>
                 <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Téléphone :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[2].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.telephone || ''}</span>
                 </div>
                 <div className="border-b border-gray-300 pb-1">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Personne rencontrée :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[3].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.personne || ''}</span>
                 </div>
                 <div className="border-b border-gray-300 pb-1 md:col-span-2">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Poste occupé :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[4].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.posteOccupe || ''}</span>
                 </div>
                 <div className="border-b border-gray-300 pb-1 md:col-span-2">
-                  <span className="font-semibold block text-xs text-gray-500 uppercase">Poste sur lequel porte l'enquête :</span>
+                  <span className="font-semibold block text-xs text-gray-500 uppercase">{sections[lang][0].fields[5].label}</span>
                   <span className="text-base sm:text-lg min-h-[1.5rem] block text-blue-900">{formData.posteEnquete || ''}</span>
                 </div>
               </div>
             </div>
 
-            {sections.slice(1).map((section) => (
+            {sections[lang].slice(1).map((section) => (
               <div key={`doc-${section.id}`} className="mb-8">
                 <h2 className="text-xl font-bold mb-5 text-gray-800 border-b border-gray-300 pb-2 page-break">
                   {section.title}
@@ -419,7 +521,7 @@ export default function App() {
                     <div key={`doc-field-${field.id}`} className="page-break">
                       <p className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">{field.label}</p>
                       <div className="answer-box min-h-[2rem] p-3 bg-gray-50 border-l-2 border-gray-400 text-gray-800 whitespace-pre-wrap text-base">
-                        {formData[field.id] ? formData[field.id] : <span className="text-gray-400 italic">Non renseigné</span>}
+                        {formData[field.id] ? formData[field.id] : <span className="text-gray-400 italic">{dict.notProvided}</span>}
                       </div>
                     </div>
                   ))}
@@ -431,15 +533,15 @@ export default function App() {
             <div className="mt-8 pt-4 border-t-2 border-gray-200 page-break">
               <div className="flex justify-between items-end">
                 <div className="text-sm text-gray-600">
-                  <p>Fait le {currentDate}</p>
-                  {formData.consent ? <p className="text-emerald-700 font-bold mt-1">✓ Consentement validé</p> : <p className="text-red-400 text-xs mt-1">Consentement en attente</p>}
+                  <p>{dict.doneOn} {currentDate}</p>
+                  {formData.consent ? <p className="text-emerald-700 font-bold mt-1">{dict.consentValidated}</p> : <p className="text-red-400 text-xs mt-1">{dict.consentPending}</p>}
                 </div>
               </div>
             </div>
 
             <div className="mt-12 text-center text-gray-600 italic page-break">
-              <p className="text-base sm:text-lg mb-1">Je vous remercie sincèrement du temps précieux que vous m'avez accordé.</p>
-              <p>Excellente journée.</p>
+              <p className="text-base sm:text-lg mb-1">{dict.thanks1}</p>
+              <p>{dict.thanks2}</p>
             </div>
 
           </div>
@@ -454,40 +556,44 @@ export default function App() {
         pdfFile={pdfFile}
         shareSubject={shareSubject}
         shareBody={shareBody}
+        dict={dict}
       />
     </div>
   );
 }
 
-const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenPreview, onGenerateAndShare, isGenerating, onPrint, progress }) => (
+const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenPreview, onGenerateAndShare, isGenerating, onPrint, progress, lang, setLang, dict }) => (
   <div className="sticky top-0 z-10 no-print shadow-md">
     <header className="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
       <h1 className="text-xl font-bold flex items-center gap-2">
         <FileText />
-        Outil d'Enquête Métier
+        {dict.title}
       </h1>
       <div className="flex gap-2 flex-wrap justify-center">
+        <button onClick={() => setLang(l => l === 'fr' ? 'en' : 'fr')} className="md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors bg-blue-800 hover:bg-blue-700" title="Changer de langue">
+          <Globe size={18} /> <span className="hidden lg:inline">{lang === 'fr' ? 'EN' : 'FR'}</span>
+        </button>
         <button onClick={() => setActiveTab('form')} className={`md:hidden px-3 py-2 rounded-md flex items-center gap-2 text-sm ${activeTab === 'form' ? 'bg-blue-700' : 'bg-blue-800'}`}>
-          <Edit /> Formulaire
+          <Edit /> {dict.form}
         </button>
         <button onClick={() => setActiveTab('preview')} className={`md:hidden px-3 py-2 rounded-md flex items-center gap-2 text-sm ${activeTab === 'preview' ? 'bg-blue-700' : 'bg-blue-800'}`}>
-          <FileText /> Aperçu
+          <FileText /> {dict.preview}
         </button>
         <button onClick={() => setIsFullscreenPreview(!isFullscreenPreview)} className={`hidden md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors ${isFullscreenPreview ? 'bg-blue-700 ring-2 ring-blue-400' : 'bg-blue-800 hover:bg-blue-700'}`} title={isFullscreenPreview ? "Revenir à l'édition" : "Voir le document en plein écran"}>
-          {isFullscreenPreview ? <Edit /> : <Eye />} <span className="hidden lg:inline">{isFullscreenPreview ? "Éditer" : "Plein Écran"}</span>
+          {isFullscreenPreview ? <Edit /> : <Eye />} <span className="hidden lg:inline">{isFullscreenPreview ? dict.edit : dict.fullscreen}</span>
         </button>
         <button onClick={onGenerateAndShare} disabled={isGenerating} className={`${isGenerating ? 'bg-gray-400 cursor-wait' : 'bg-sky-600 hover:bg-sky-500'} text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium`}>
-          {isGenerating ? <span className="animate-pulse">Génération...</span> : <><Mail /><span className="hidden sm:inline">Envoyer PDF</span></>}
+          {isGenerating ? <span className="animate-pulse">{dict.generating}</span> : <><Mail /><span className="hidden sm:inline">{dict.sendPdf}</span></>}
         </button>
         <button onClick={onPrint} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium">
           <Printer /> 
-          <span className="hidden sm:inline">Imprimer / PDF</span>
+          <span className="hidden sm:inline">{dict.printPdf}</span>
         </button>
       </div>
     </header>
     <div className="px-4 pt-1 pb-2 bg-blue-900 border-t border-blue-800/50">
       <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-semibold text-blue-200/80 uppercase tracking-wider">Progression</span>
+        <span className="text-xs font-semibold text-blue-200/80 uppercase tracking-wider">{dict.progress}</span>
         <span className="text-sm font-bold text-white">{progress}%</span>
       </div>
       <div className="w-full bg-black/25 rounded-full h-2.5 shadow-inner">
@@ -497,34 +603,34 @@ const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenP
   </div>
 );
 
-const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBody }) => {
+const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBody, dict }) => {
   if (!show) return null;
 
   const shareOptions = [
     {
       href: `mailto:?subject=${encodeURIComponent(shareSubject)}&body=${encodeURIComponent(shareBody)}`,
-      label: "Partager par Email",
-      name: "Email",
+      label: dict.shareEmail,
+      name: dict.shareEmailShort,
       Icon: Mail,
       className: "bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700"
     },
     {
       href: `https://wa.me/?text=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`,
-      label: "Partager par WhatsApp",
+      label: dict.shareWhatsapp,
       name: "WhatsApp",
       Icon: IconWhatsApp,
       className: "bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
     },
     {
       href: `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`,
-      label: "Partager par Telegram",
+      label: dict.shareTelegram,
       name: "Telegram",
       Icon: IconTelegram,
       className: "bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-700"
     },
     {
       href: `sms:?&body=${encodeURIComponent(shareSubject + "\n\n" + shareBody)}`,
-      label: "Partager par SMS",
+      label: dict.shareSms,
       name: "SMS",
       Icon: MessageSquare,
       className: "bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-700"
@@ -537,8 +643,8 @@ const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBo
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"><X /></button>
         <div className="text-center mb-6">
           <div className="mx-auto bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-sm"><Download size={32} /></div>
-          <h3 className="text-xl font-bold text-gray-900">Document téléchargé !</h3>
-          <p className="text-gray-500 mt-2 text-sm leading-relaxed">Le PDF a été enregistré. Choisissez comment envoyer le message (n'oubliez pas de <strong>joindre le fichier</strong>) :</p>
+          <h3 className="text-xl font-bold text-gray-900">{dict.downloaded}</h3>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">{dict.downloadDesc} <strong>{dict.attachFile}</strong>{dict.downloadDescEnd}</p>
         </div>
         {canSharePdf && (
           <button
@@ -548,7 +654,7 @@ const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBo
             }}
             className="w-full mb-4 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2"
           >
-            <Share2 size={20} /> Partager le fichier directement
+            <Share2 size={20} /> {dict.shareDirect}
           </button>
         )}
         <div className="grid grid-cols-2 gap-3">
@@ -559,13 +665,13 @@ const ShareModal = ({ show, onClose, canSharePdf, pdfFile, shareSubject, shareBo
             </a>
           ))}
         </div>
-        <button onClick={onClose} className="w-full mt-6 bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg">Fermer</button>
+        <button onClick={onClose} className="w-full mt-6 bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg">{dict.close}</button>
       </div>
     </div>
   );
 };
 
-async function generatePdfDocument(formData) {
+async function generatePdfDocument(formData, lang, dict) {
   const [logo1Data, logo2Data] = await Promise.all([
     loadImageAsDataURI('/logo1.png'),
     loadImageAsDataURI('/logo2.png')
@@ -602,21 +708,21 @@ async function generatePdfDocument(formData) {
   }
   if (logo1Data || logo2Data) y += logoHeight + 10;
 
-  pdf.setFontSize(24).setFont('helvetica', 'bold').text("Enquête Métier", pdfWidth / 2, y, { align: 'center' });
+  pdf.setFontSize(24).setFont('helvetica', 'bold').text(dict.pdfTitle, pdfWidth / 2, y, { align: 'center' });
   y += 15;
 
   checkPageBreak(40);
-  pdf.setFontSize(16).setFont('helvetica', 'bold').setTextColor(49, 46, 129).text("Motivation", margin, y);
+  pdf.setFontSize(16).setFont('helvetica', 'bold').setTextColor(49, 46, 129).text(dict.motivation, margin, y);
   y += 5;
   pdf.setLineWidth(0.5).setDrawColor(209, 213, 219).line(margin, y, pdfWidth - margin, y);
   y += 10;
 
   pdf.setFontSize(11).setFont('helvetica', 'normal').setTextColor(0, 0, 0);
   const motivationText = [
-    "Bonjour Madame, Mademoiselle, Monsieur,",
-    "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
-    "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant de bien vouloir accepter de répondre à un questionnaire.",
-    "Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).\nVotre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur."
+    dict.para1,
+    dict.para2,
+    dict.para3,
+    dict.para4
   ];
   motivationText.forEach(para => {
     const lines = pdf.splitTextToSize(para, maxLineWidth);
@@ -626,7 +732,7 @@ async function generatePdfDocument(formData) {
   });
   y += 10;
 
-  sections.forEach((section) => {
+  sections[lang].forEach((section) => {
     checkPageBreak(20);
     pdf.setFontSize(16).setFont('helvetica', 'bold').setTextColor(49, 46, 129).text(section.title, margin, y);
     y += 5;
@@ -635,7 +741,7 @@ async function generatePdfDocument(formData) {
 
     section.fields.forEach(field => {
       const questionLines = pdf.splitTextToSize(field.label, maxLineWidth);
-      const answer = formData[field.id] || 'Non renseigné';
+      const answer = formData[field.id] || dict.notProvided;
       const answerLines = pdf.splitTextToSize(answer, maxLineWidth - 4);
       const neededHeight = (questionLines.length * (lineHeight - 2)) + (answerLines.length * lineHeight) + 12;
       checkPageBreak(neededHeight);
@@ -656,9 +762,9 @@ async function generatePdfDocument(formData) {
   y += 10;
   pdf.setLineWidth(0.2).setDrawColor(209, 213, 219).line(margin, y, pdfWidth - margin, y);
   y += 10;
-  pdf.setFontSize(10).setTextColor(0, 0, 0).text(`Fait le ${new Date().toLocaleDateString('fr-FR')}`, margin, y);
+  pdf.setFontSize(10).setTextColor(0, 0, 0).text(`${dict.doneOn} ${new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US')}`, margin, y);
   if (formData.consent) {
-    pdf.setTextColor(0, 128, 0).setFont('helvetica', 'bold').text("✓ Consentement validé", margin, y + lineHeight);
+    pdf.setTextColor(0, 128, 0).setFont('helvetica', 'bold').text(dict.consentValidated, margin, y + lineHeight);
   }
 
   pdf.save("enquete-metier.pdf");

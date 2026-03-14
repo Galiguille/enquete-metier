@@ -1,4 +1,5 @@
-export const sections = [
+export const sections = {
+  fr: [
   {
     id: 'section1',
     title: 'Présentation de l\'entreprise',
@@ -54,4 +55,62 @@ export const sections = [
       { id: 'immersion', label: "Seriez-vous prêt(e) à accueillir dans votre entreprise un demandeur d'emploi pour découvrir ce métier (convention de stage gratuite de 5 à 10 jours, mise en place par Pôle emploi) ? (Immersion professionnelle)", type: 'textarea' },
     ]
   }
-];
+  ],
+  en: [
+    {
+      id: 'section1',
+      title: 'Company Overview',
+      fields: [
+        { id: 'entreprise', label: 'Company or organization:', type: 'text' },
+        { id: 'adresse', label: 'Address:', type: 'text' },
+        { id: 'telephone', label: 'Phone:', type: 'text' },
+        { id: 'personne', label: 'Name of the person met:', type: 'text' },
+        { id: 'posteOccupe', label: 'Position held:', type: 'text' },
+        { id: 'posteEnquete', label: 'Target position of the survey:', type: 'text' },
+      ]
+    },
+    {
+      id: 'acces',
+      title: 'Access Conditions',
+      fields: [
+        { id: 'tempsTravail', label: 'How long have you been doing this job?', type: 'textarea' },
+        { id: 'arrivePoste', label: 'How did you get this position?', type: 'textarea' },
+        { id: 'formation', label: 'What is your educational background?', type: 'textarea' },
+        { id: 'diplomeExige', label: 'Is a specific degree required? If so, which one?', type: 'textarea' },
+        { id: 'centresFormation', label: 'Do you know the training centers for this?', type: 'textarea' },
+        { id: 'concours', label: 'If recruited by exam, what are the conditions and level?', type: 'textarea' },
+        { id: 'qualites', label: 'In your opinion, what qualities are necessary for this job?', type: 'textarea' },
+      ]
+    },
+    {
+      id: 'contenu',
+      title: 'Job Content',
+      fields: [
+        { id: 'consisteTravail', label: 'What does the work consist of?', type: 'textarea' },
+        { id: 'ensembleTaches', label: 'Can you describe all the tasks?', type: 'textarea' },
+        { id: 'attraits', label: 'What attracted you to this job, positive aspects?', type: 'textarea' },
+        { id: 'contraintes', label: 'What are the constraints, the most difficult aspects?', type: 'textarea' },
+        { id: 'travailEquipe', label: 'Is it teamwork? If so, specify.', type: 'textarea' },
+        { id: 'professionnelsExt', label: 'Do you work with external professionals? If so, which ones?', type: 'textarea' },
+      ]
+    },
+    {
+      id: 'conditions',
+      title: 'Working Conditions',
+      fields: [
+        { id: 'horaires', label: 'What are the hours & days?', type: 'textarea' },
+        { id: 'heuresSemaine', label: 'How many working hours per week?', type: 'input' },
+        { id: 'salaire', label: 'Salary for a beginner?', type: 'input' },
+        { id: 'tenue', label: 'Is a specific outfit required?', type: 'textarea' },
+        { id: 'contreIndications', label: 'Are there any contraindications (health, availability...)?', type: 'textarea' },
+        { id: 'debouches', label: 'Do you think there are currently job opportunities?', type: 'textarea' },
+        { id: 'recrutement', label: 'How does the company recruit (ads, job center...)?', type: 'textarea' },
+        { id: 'criteres', label: 'What are the selection criteria? (experience, internship, initiative...)', type: 'textarea' },
+        { id: 'conservationCV', label: 'How long do you keep the CVs sent to you?', type: 'textarea' },
+        { id: 'typeContrat', label: 'What types of contracts does your company offer?', type: 'textarea' },
+        { id: 'personneRecrutement', label: 'Who is in charge of recruitment in your entity?', type: 'input' },
+        { id: 'immersion', label: 'Would you be willing to host a job seeker in your company for a 5 to 10 day discovery internship? (Professional immersion)', type: 'textarea' },
+      ]
+    }
+  ]
+};
