@@ -69,6 +69,7 @@ const i18n = {
     newSurvey: "Nouvelle enquête",
     changeLanguage: "Changer de langue",
     contactMe: "Des questions ou des suggestions ? Contactez-moi :",
+    restorePrompt: "Des données d'une enquête précédente ont été trouvées.\nVoulez-vous les effacer pour commencer une nouvelle enquête ?",
     returnEmailBody: "Bonjour,\n\nSuite à votre demande, veuillez trouver ci-joint mes réponses à votre enquête métier.\n\nCordialement.",
     myContactInfo: "Mes coordonnées :",
     emailStr: "Email : galiguille@gmail.com",
@@ -124,6 +125,7 @@ const i18n = {
     newSurvey: "New survey",
     changeLanguage: "Change language",
     contactMe: "Questions or suggestions? Contact me:",
+    restorePrompt: "Previous survey data was found.\nDo you want to clear it to start a new survey?",
     returnEmailBody: "Hello,\n\nFollowing your request, please find attached my answers to your job survey.\n\nBest regards.",
     myContactInfo: "My contact information:",
     emailStr: "Email: galiguille@gmail.com",
@@ -164,6 +166,19 @@ export default function App() {
       document.head.appendChild(meta);
     }
     meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
+  }, []);
+
+  // Demande à l'utilisateur s'il veut restaurer ou effacer les données au chargement
+  useEffect(() => {
+    if (Object.keys(formData).length > 0) {
+      setTimeout(() => {
+        if (window.confirm(i18n[lang].restorePrompt)) {
+          setFormData({});
+          localStorage.removeItem('enquete-metier-data');
+        }
+      }, 300);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sauvegarde automatique dans localStorage
