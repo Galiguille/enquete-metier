@@ -69,7 +69,7 @@ const i18n = {
     newSurvey: "Nouvelle enquête",
     changeLanguage: "Changer de langue",
     contactMe: "Des questions ou des suggestions ? Contactez-moi :",
-    shareFooter: "Vous pouvez me recontacter aux coordonnées suivantes :\nEmail : galiguille@gmail.com\nTéléphone / WhatsApp : 07 82 20 22 77",
+    returnEmailBody: "Bonjour,\n\nSuite à votre demande, veuillez trouver ci-joint mes réponses à votre enquête métier.\n\nCordialement.",
     myContactInfo: "Mes coordonnées :",
     emailStr: "Email : galiguille@gmail.com",
     phoneStr: "Tél / WhatsApp : 07 82 20 22 77"
@@ -124,7 +124,7 @@ const i18n = {
     newSurvey: "New survey",
     changeLanguage: "Change language",
     contactMe: "Questions or suggestions? Contact me:",
-    shareFooter: "You can reach me at the following contact details:\nEmail: galiguille@gmail.com\nPhone / WhatsApp: +33 7 82 20 22 77",
+    returnEmailBody: "Hello,\n\nFollowing your request, please find attached my answers to your job survey.\n\nBest regards.",
     myContactInfo: "My contact information:",
     emailStr: "Email: galiguille@gmail.com",
     phoneStr: "Phone / WhatsApp: +33 7 82 20 22 77"
@@ -245,7 +245,7 @@ export default function App() {
 
   // Préparation des messages de partage
   const shareSubject = `${dict.pdfTitle} : ${formData.entreprise || dict.newSurvey}`;
-  const shareBody = `${dict.para1}\n\n${dict.para2}\n\n${dict.para3}\n\n${dict.shareFooter}`;
+  const shareBody = dict.returnEmailBody;
 
   // Vérification sécurisée du support de partage de fichiers
   const canSharePdf = () => {
