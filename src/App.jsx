@@ -68,7 +68,11 @@ const i18n = {
     shareSms: "Partager par SMS",
     newSurvey: "Nouvelle enquête",
     changeLanguage: "Changer de langue",
-    contactMe: "Des questions ou des suggestions ? Contactez-moi :"
+    contactMe: "Des questions ou des suggestions ? Contactez-moi :",
+    shareFooter: "Vous pouvez me recontacter aux coordonnées suivantes :\nEmail : galiguille@gmail.com\nTéléphone / WhatsApp : 07 82 20 22 77",
+    myContactInfo: "Mes coordonnées :",
+    emailStr: "Email : galiguille@gmail.com",
+    phoneStr: "Tél / WhatsApp : 07 82 20 22 77"
   },
   en: {
     title: "Job Survey Tool",
@@ -119,7 +123,11 @@ const i18n = {
     shareSms: "Share via SMS",
     newSurvey: "New survey",
     changeLanguage: "Change language",
-    contactMe: "Questions or suggestions? Contact me:"
+    contactMe: "Questions or suggestions? Contact me:",
+    shareFooter: "You can reach me at the following contact details:\nEmail: galiguille@gmail.com\nPhone / WhatsApp: +33 7 82 20 22 77",
+    myContactInfo: "My contact information:",
+    emailStr: "Email: galiguille@gmail.com",
+    phoneStr: "Phone / WhatsApp: +33 7 82 20 22 77"
   }
 };
 
@@ -237,7 +245,7 @@ export default function App() {
 
   // Préparation des messages de partage
   const shareSubject = `${dict.pdfTitle} : ${formData.entreprise || dict.newSurvey}`;
-  const shareBody = `${dict.para1}\n\n${dict.para2}\n\n${dict.para3}`;
+  const shareBody = `${dict.para1}\n\n${dict.para2}\n\n${dict.para3}\n\n${dict.shareFooter}`;
 
   // Vérification sécurisée du support de partage de fichiers
   const canSharePdf = () => {
@@ -542,6 +550,13 @@ export default function App() {
                   <p>{dict.doneOn} {currentDate}</p>
                   {formData.consent ? <p className="text-emerald-700 font-bold mt-1">{dict.consentValidated}</p> : <p className="text-red-400 text-xs mt-1">{dict.consentPending}</p>}
                 </div>
+
+                {/* Encart Coordonnées */}
+                <div className="text-sm text-right text-gray-700">
+                  <p className="font-bold text-blue-900 mb-1">{dict.myContactInfo}</p>
+                  <p>{dict.emailStr}</p>
+                  <p>{dict.phoneStr}</p>
+                </div>
               </div>
             </div>
 
@@ -772,6 +787,15 @@ async function generatePdfDocument(formData, lang, dict) {
   if (formData.consent) {
     pdf.setTextColor(0, 128, 0).setFont('helvetica', 'bold').text(dict.consentValidated, margin, y + lineHeight);
   }
+
+  // Ajout des coordonnées en bas du PDF
+  y += lineHeight * 2.5;
+  checkPageBreak(30);
+  pdf.setFontSize(11).setTextColor(49, 46, 129).setFont('helvetica', 'bold').text(dict.myContactInfo, margin, y);
+  y += lineHeight;
+  pdf.setFontSize(10).setTextColor(0, 0, 0).setFont('helvetica', 'normal').text(dict.emailStr, margin, y);
+  y += lineHeight;
+  pdf.text(dict.phoneStr, margin, y);
 
   pdf.save("enquete-metier.pdf");
   const blob = pdf.output('blob');
