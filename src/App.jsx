@@ -6,6 +6,11 @@ import {
 import { sections } from './data/sections';
 import { loadImageAsDataURI } from './utils/imageLoader';
 
+// --- Configuration Backend (Pro Solution) ---
+const SUPABASE_URL = 'https://VOTRE_SUPABASE_URL.supabase.co';
+const SUPABASE_ANON_KEY = 'VOTRE_SUPABASE_ANON_KEY';
+const FORMSPREE_URL = 'https://formspree.io/f/mjgapwwk';
+
 // --- Custom SVG Icons for Share Modal ---
 const IconWhatsApp = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -77,7 +82,8 @@ const i18n = {
     sendDirectly: "Envoi direct",
     sendingDirectly: "Envoi...",
     sendSuccess: "Les réponses ont été envoyées avec succès !",
-    sendError: "Une erreur est survenue lors de l'envoi."
+    sendError: "Une erreur est survenue lors de l'envoi.",
+    importUrlPrompt: "Une enquête a été détectée via le lien. Voulez-vous l'importer ?"
   },
   en: {
     title: "Job Survey Tool",
@@ -137,7 +143,8 @@ const i18n = {
     sendDirectly: "Direct Send",
     sendingDirectly: "Sending...",
     sendSuccess: "Responses successfully sent!",
-    sendError: "An error occurred while sending."
+    sendError: "An error occurred while sending.",
+    importUrlPrompt: "A survey was detected via the link. Do you want to import it?"
   }
 };
 
@@ -177,9 +184,35 @@ export default function App() {
     meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
   }, []);
 
-  // Demande à l'utilisateur s'il veut restaurer ou effacer les données au chargement
+  // Vérification de l'URL pour charger depuis la base de données ou le cache local
   useEffect(() => {
-    if (Object.keys(formData).length > 0) {
+    const loadFromDb = async (id) => {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/enquetes?id=eq.${id}&select=data`, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+        const result = await response.json();
+        if (result && result.length > 0) {
+          if (window.confirm(i18n[lang].importUrlPrompt)) {
+            setFormData(result[0].data);
+            // Nettoyer l'URL pour éviter de recharger en boucle à chaque rafraîchissement
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur de chargement DB:", error);
+      }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    if (id) {
+      setTimeout(() => loadFromDb(id), 300);
+    } else if (Object.keys(formData).length > 0) {
       setTimeout(() => {
         if (window.confirm(i18n[lang].restorePrompt)) {
           setFormData({});
@@ -332,17 +365,35 @@ export default function App() {
 
     setIsSending(true);
     try {
-      // Remplacez 'VOTRE_ID_FORMSPREE' par votre véritable identifiant Formspree ou Web3Forms
-      const response = await fetch('https://formspree.io/f/mjgapwwk', {
+      // 1. Sauvegarde dans la base de données (Supabase)
+      const dbResponse = await fetch(`${SUPABASE_URL}/rest/v1/enquetes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ data: formData })
+      });
+      if (!dbResponse.ok) throw new Error("Erreur base de données");
+      const dbResult = await dbResponse.json();
+      const recordId = dbResult[0].id;
+
+      // 2. Envoi de l'email via Formspree contenant le lien magique
+      const magicLink = `${window.location.origin}${window.location.pathname}?id=${recordId}`;
+      const emailResponse = await fetch(FORMSPREE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           _subject: `Nouvelle réponse Enquête Métier - ${formData.entreprise || 'Anonyme'}`,
-          ...formData
+          message: "Une nouvelle réponse a été soumise. Cliquez sur le lien ci-dessous pour l'ouvrir et générer le PDF :",
+          lien_magique: magicLink,
+          entreprise: formData.entreprise || 'Non renseigné'
         })
       });
 
-      if (response.ok) alert(dict.sendSuccess);
+      if (emailResponse.ok) alert(dict.sendSuccess);
       else alert(dict.sendError);
     } catch (error) {
       console.error("Erreur d'envoi:", error);

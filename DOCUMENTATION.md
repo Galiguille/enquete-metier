@@ -19,7 +19,8 @@ Elle permet à l'utilisateur de :
 - **jsPDF** : Bibliothèque permettant de générer et dessiner le fichier PDF entièrement côté client.
 - **Lucide React** : Bibliothèque d'icônes vectorielles (SVG).
 - **Web Speech API** : API native des navigateurs (Chrome, Safari, Edge) pour la dictée vocale.
-- **Formspree / Web3Forms** (ou service similaire) : Pour permettre l'envoi des données en arrière-plan.
+- **Supabase** (Base de données PostgreSQL) : Pour le stockage des réponses côté serveur (Solution Pro).
+- **Formspree** : Pour l'envoi d'e-mails de notification contenant le "lien magique".
 
 ---
 
@@ -74,12 +75,10 @@ L'application propose deux méthodes de partage via une modale élégante :
 2. **Les liens de secours** : Des liens préformatés permettent d'ouvrir Email, Telegram ou WhatsApp avec un message d'accompagnement tout prêt.
 
 ### Étape 7 : L'envoi direct des réponses
-Pour offrir une alternative à la génération de PDF, un bouton "Envoi direct" a été ajouté.
-- Il utilise un service externe (comme Formspree) qui fournit une URL.
-- Au clic, la fonction `handleDirectSend` est appelée.
-- Elle envoie les données du formulaire (`formData`) via une requête `fetch` (POST) à l'URL du service.
-- Le service se charge ensuite de formater ces données et de les envoyer par e-mail au destinataire configuré (vous).
-- Cela se passe en arrière-plan, sans que l'utilisateur ait à faire quoi que ce soit de plus.
+Pour offrir une alternative silencieuse à la génération PDF, la solution Pro est mise en place.
+1. **Écriture (Envoi)** : Au clic sur "Envoi direct", l'application effectue une requête `POST` vers l'API REST de Supabase pour y stocker un objet JSON contenant toutes les réponses. Supabase retourne un identifiant unique (UUID).
+2. **Notification** : L'application compose un "lien magique" (`https://votre-site.com/?id=...`) et utilise Formspree pour l'envoyer par e-mail au gestionnaire de l'enquête. L'utilisateur ne voit rien de cette étape.
+3. **Lecture (Récupération)** : À l'ouverture de l'application, un `useEffect` vérifie si l'URL contient le paramètre `?id=`. Si c'est le cas, l'application interroge Supabase, télécharge les données correspondantes, et pré-remplit instantanément le formulaire et l'aperçu PDF.
 
 ---
 
