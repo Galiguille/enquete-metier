@@ -48,7 +48,7 @@ const i18n = {
     motivation: "Motivation",
     para1: "Bonjour Madame, Mademoiselle, Monsieur,",
     para2: "Je suis actuellement en pleine réflexion sur mon avenir professionnel et suis particulièrement intéressé par votre métier.",
-    para3: "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant(e) de bien vouloir accepter de répondre à un questionnaire.",
+    para3: "Aussi, afin de m'en faire une image des plus objectives, j'aurai besoin d'informations sur certains aspects de la profession et vous serais reconnaissant de bien vouloir accepter de répondre à un questionnaire.",
     para4: "Je vous assure d'ores et déjà que cela ne vous prendra que très peu de temps (environ 15 minutes).\nVotre avis m'est précieux et me permettra de déterminer mon positionnement sur ce secteur.",
     surveyTitle: "Enquête sur les métiers",
     notProvided: "Non renseigné",
