@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import { 
-  FileText, Edit, Eye, Mail, Printer, Mic, ChevronDown, Download, Share2, X, MessageSquare, Globe
+  FileText, Edit, Eye, Mail, Printer, Mic, ChevronDown, Download, Share2, X, MessageSquare, Globe, Send
 } from 'lucide-react';
 import { sections } from './data/sections';
 import { loadImageAsDataURI } from './utils/imageLoader';
@@ -73,7 +73,11 @@ const i18n = {
     returnEmailBody: "Bonjour,\n\nSuite à votre demande, veuillez trouver ci-joint mes réponses à votre enquête métier.\n\nCordialement.",
     myContactInfo: "Mes coordonnées :",
     emailStr: "Email : galiguille@gmail.com",
-    phoneStr: "Tél / WhatsApp : 07 82 20 22 77"
+    phoneStr: "Tél / WhatsApp : 07 82 20 22 77",
+    sendDirectly: "Envoi direct",
+    sendingDirectly: "Envoi...",
+    sendSuccess: "Les réponses ont été envoyées avec succès !",
+    sendError: "Une erreur est survenue lors de l'envoi."
   },
   en: {
     title: "Job Survey Tool",
@@ -129,7 +133,11 @@ const i18n = {
     returnEmailBody: "Hello,\n\nFollowing your request, please find attached my answers to your job survey.\n\nBest regards.",
     myContactInfo: "My contact information:",
     emailStr: "Email: galiguille@gmail.com",
-    phoneStr: "Phone / WhatsApp: +33 7 82 20 22 77"
+    phoneStr: "Phone / WhatsApp: +33 7 82 20 22 77",
+    sendDirectly: "Direct Send",
+    sendingDirectly: "Sending...",
+    sendSuccess: "Responses successfully sent!",
+    sendError: "An error occurred while sending."
   }
 };
 
@@ -151,6 +159,7 @@ export default function App() {
   const [listeningField, setListeningField] = useState(null);
   const [highlightConsent, setHighlightConsent] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const recognitionRef = useRef(null);
   const currentDate = new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US');
@@ -306,6 +315,43 @@ export default function App() {
     }
   };
 
+  const handleDirectSend = async () => {
+    if (!formData.consent) {
+      alert(dict.alertConsent);
+      setActiveTab('form');
+      setTimeout(() => {
+        const checkbox = document.getElementById('rgpd-checkbox');
+        if (checkbox) {
+          checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightConsent(true);
+          setTimeout(() => setHighlightConsent(false), 9000);
+        }
+      }, 100);
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      // Remplacez 'VOTRE_ID_FORMSPREE' par votre véritable identifiant Formspree ou Web3Forms
+      const response = await fetch('https://formspree.io/f/mjgapwwk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: `Nouvelle réponse Enquête Métier - ${formData.entreprise || 'Anonyme'}`,
+          ...formData
+        })
+      });
+
+      if (response.ok) alert(dict.sendSuccess);
+      else alert(dict.sendError);
+    } catch (error) {
+      console.error("Erreur d'envoi:", error);
+      alert(dict.sendError);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-gray-100 flex flex-col font-sans main-app-wrapper">
       
@@ -369,6 +415,8 @@ export default function App() {
         setIsFullscreenPreview={setIsFullscreenPreview}
         onGenerateAndShare={generateAndSharePdf}
         isGenerating={isGenerating}
+        onDirectSend={handleDirectSend}
+        isSending={isSending}
         onPrint={handlePrint}
         progress={progress}
         lang={lang}
@@ -598,7 +646,7 @@ export default function App() {
   );
 }
 
-const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenPreview, onGenerateAndShare, isGenerating, onPrint, progress, lang, setLang, dict }) => (
+const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenPreview, onGenerateAndShare, isGenerating, onDirectSend, isSending, onPrint, progress, lang, setLang, dict }) => (
   <div className="sticky top-0 z-10 no-print shadow-md">
     <header className="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
       <h1 className="text-xl font-bold flex items-center gap-2">
@@ -617,6 +665,9 @@ const Header = ({ activeTab, setActiveTab, isFullscreenPreview, setIsFullscreenP
         </button>
         <button onClick={() => setIsFullscreenPreview(!isFullscreenPreview)} className={`hidden md:flex px-3 py-2 rounded-md items-center gap-2 text-sm transition-colors ${isFullscreenPreview ? 'bg-blue-700 ring-2 ring-blue-400' : 'bg-blue-800 hover:bg-blue-700'}`} title={isFullscreenPreview ? dict.editFullscreen : dict.seeFullscreen} aria-label={isFullscreenPreview ? dict.editFullscreen : dict.seeFullscreen}>
           {isFullscreenPreview ? <Edit /> : <Eye />} <span className="hidden lg:inline">{isFullscreenPreview ? dict.edit : dict.fullscreen}</span>
+        </button>
+        <button onClick={onDirectSend} disabled={isSending} className={`${isSending ? 'bg-gray-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-500'} text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium`}>
+          {isSending ? <span className="animate-pulse">{dict.sendingDirectly}</span> : <><Send size={18} /><span className="hidden sm:inline">{dict.sendDirectly}</span></>}
         </button>
         <button onClick={onGenerateAndShare} disabled={isGenerating} className={`${isGenerating ? 'bg-gray-400 cursor-wait' : 'bg-sky-600 hover:bg-sky-500'} text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors text-sm font-medium`}>
           {isGenerating ? <span className="animate-pulse">{dict.generating}</span> : <><Mail /><span className="hidden sm:inline">{dict.sendPdf}</span></>}
