@@ -9,6 +9,7 @@ Elle permet à l'utilisateur de :
 - Sauvegarder automatiquement ses réponses en local (pour ne rien perdre en cas de rafraîchissement).
 - Générer un document PDF propre, formaté et prêt à être envoyé.
 - Partager le PDF généré via Email, WhatsApp, Telegram, SMS ou l'outil de partage natif du téléphone.
+- Envoyer les réponses directement par e-mail au propriétaire de l'application (via un service tiers comme Formspree).
 
 ---
 
@@ -18,6 +19,7 @@ Elle permet à l'utilisateur de :
 - **jsPDF** : Bibliothèque permettant de générer et dessiner le fichier PDF entièrement côté client.
 - **Lucide React** : Bibliothèque d'icônes vectorielles (SVG).
 - **Web Speech API** : API native des navigateurs (Chrome, Safari, Edge) pour la dictée vocale.
+- **Formspree / Web3Forms** (ou service similaire) : Pour permettre l'envoi des données en arrière-plan.
 
 ---
 
@@ -70,6 +72,14 @@ Lorsque l'utilisateur clique sur "Envoyer PDF", la fonction asynchrone `generate
 L'application propose deux méthodes de partage via une modale élégante :
 1. **Le partage direct (Web Share API)** : Si l'appareil le permet (notamment sur iOS/Android), le bouton "Partager le fichier directement" utilise `navigator.share()` et transfère le véritable fichier PDF aux applications de l'utilisateur (Mail, WhatsApp, etc.).
 2. **Les liens de secours** : Des liens préformatés permettent d'ouvrir Email, Telegram ou WhatsApp avec un message d'accompagnement tout prêt.
+
+### Étape 7 : L'envoi direct des réponses
+Pour offrir une alternative à la génération de PDF, un bouton "Envoi direct" a été ajouté.
+- Il utilise un service externe (comme Formspree) qui fournit une URL.
+- Au clic, la fonction `handleDirectSend` est appelée.
+- Elle envoie les données du formulaire (`formData`) via une requête `fetch` (POST) à l'URL du service.
+- Le service se charge ensuite de formater ces données et de les envoyer par e-mail au destinataire configuré (vous).
+- Cela se passe en arrière-plan, sans que l'utilisateur ait à faire quoi que ce soit de plus.
 
 ---
 
