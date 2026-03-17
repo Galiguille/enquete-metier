@@ -7,8 +7,8 @@ import { sections } from './data/sections';
 import { loadImageAsDataURI } from './utils/imageLoader';
 
 // --- Configuration Backend (Pro Solution) ---
-const SUPABASE_URL = 'https://VOTRE_SUPABASE_URL.supabase.co';
-const SUPABASE_ANON_KEY = 'VOTRE_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://mbqggxcxoimxqaqzlwvp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1icWdneGN4b2lteHFhcXpsd3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NTkzNjYsImV4cCI6MjA4OTMzNTM2Nn0.-Ph007WplN1B2Wi2hfYTlwfZj2FR0ZNWTWoMhtZvsy8';
 const FORMSPREE_URL = 'https://formspree.io/f/mjgapwwk';
 
 // --- Custom SVG Icons for Share Modal ---
@@ -376,7 +376,11 @@ export default function App() {
         },
         body: JSON.stringify({ data: formData })
       });
-      if (!dbResponse.ok) throw new Error("Erreur base de données");
+      
+      if (!dbResponse.ok) {
+        const errDetails = await dbResponse.text();
+        throw new Error(`Erreur Supabase: ${errDetails}`);
+      }
       const dbResult = await dbResponse.json();
       const recordId = dbResult[0].id;
 
@@ -393,11 +397,15 @@ export default function App() {
         })
       });
 
-      if (emailResponse.ok) alert(dict.sendSuccess);
-      else alert(dict.sendError);
+      if (emailResponse.ok) {
+        alert(dict.sendSuccess);
+      } else {
+        const emailErr = await emailResponse.text();
+        throw new Error(`Erreur Formspree: ${emailErr}`);
+      }
     } catch (error) {
-      console.error("Erreur d'envoi:", error);
-      alert(dict.sendError);
+      console.error("Détail complet de l'erreur d'envoi:", error);
+      alert(dict.sendError + "\nRegardez la console pour plus de détails.");
     } finally {
       setIsSending(false);
     }
